@@ -1,7 +1,8 @@
 """Module for emoji sentiment analysis and data structures."""
 
-import os
 import csv
+from importlib.resources import as_file, files
+from pathlib import Path
 from typing import Union, Dict, Annotated, List
 from pydantic import BaseModel, Field
 import emoji_data_python
@@ -27,12 +28,19 @@ class EmojiSentiment():
     EmojiSentiment is a class that provides a sentiment score for a given emoji.
     """
 
-    CSV_FILE_PATH = os.path.join(os.path.dirname(
-        __file__), "Emoji_Sentiment_Data_v1.0.csv")
+    CSV_RESOURCE = files("emoji_sentiment").joinpath(
+        "data"
+    ).joinpath("Emoji_Sentiment_Data_v1.0.csv")
+    CSV_FILE_PATH = str(CSV_RESOURCE)
 
     def __init__(self, round_to: int = 3):
         self._data: Dict[str, Emoji] = {}
-        with open(self.CSV_FILE_PATH, newline="", encoding="utf-8") as f:
+        csv_resource = self.CSV_RESOURCE
+        if self.CSV_FILE_PATH != str(self.CSV_RESOURCE):
+            csv_resource = Path(self.CSV_FILE_PATH)
+        with as_file(csv_resource) as csv_path, csv_path.open(
+            newline="", encoding="utf-8"
+        ) as f:
             for row in csv.DictReader(f):
                 samples = int(row["Negative"]) + \
                     int(row["Neutral"]) + int(row["Positive"])

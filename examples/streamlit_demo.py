@@ -29,7 +29,7 @@ if __name__ == "__main__":
         showlegend=True
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.write("---")
     st.header("Search emoji by short name")
