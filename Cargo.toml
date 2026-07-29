@@ -16,3 +16,4 @@ unicode-segmentation = "1.12"
 comfy-table = "7.1"
 colored = "3.0"
 anyhow = "1.0"
+charabia = { version = "0.9", default-features = false, features = ["chinese-segmentation", "japanese-segmentation-ipadic", "korean"] }

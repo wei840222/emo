@@ -10,6 +10,7 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 
 - ⚡ **Zero external runtime dependencies**: The entire dataset is embedded in the compiled binary at build time.
 - 📊 **Comprehensive Sentiment & Intensity Metrics**: Calculates weighted sentiment scores (`-1.0` to `+1.0`), emotional intensity (`0.0` to `1.0`), usage density, Shannon entropy, and positive/neutral/negative breakdowns.
+- ⚖️ **Polarization Index & Emotional Shift**: Detects emotional conflicts (contrasting positive and negative emojis) and tracks emotional progression across text timeline, paragraphs, or lines.
 - 🔥 **Bursts & Combos Detection**: Identifies repeated emoji bursts (streaks like `🔥🔥🔥`) and frequent adjacent pairs (combos like `🔥🚀`).
 - 🎨 **Beautiful Terminal Output**: Displays colorful progress, style ratings, and formatted tables in terminal mode.
 - 🤖 **Pipeline & JSON Ready**: Supports `--json` / `-j` and `--summary` / `-s` for script automation and CI/CD integration.
@@ -17,10 +18,15 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 
 ## Metrics & Output Definitions
 
-| Metric | Formula / Calculation | Description |
-| :--- | :--- | :--- |
+| **Multi-File Benchmark** | Aggregated per file | When passing multiple files, benchmarks each file side-by-side (`File Name`, `Emojis`, `Score`, `Intensity`, `Top Emoji`) in a comparative table. |
+| **Placement Bias** | Relative position ($0.0$ to $1.0$) | Evaluates whether emojis are `Front-loaded` ($0-33\%$), `Balanced Placement`, or `Trailing / End-loaded` ($66-100\%$). |
+| **Sentiment Volatility (\(\sigma\))** | Standard Deviation of scores | Measures emotional stability vs mood swings (`Monotone / Consistent` $\sigma < 0.2$ vs `High Volatility` $\sigma \ge 0.4$). |
+| **Ambiguity Index (%)** | Neutral emoji ratio | Measures neutral/reserved expression (`Subtle / Ambiguous 💭` $> 50\%$ vs `Direct & Explicit 🎯` $< 20\%$). |
 | **Overall Sentiment Score** | \(\frac{\sum (\text{Score}_i \times \text{Count}_i)}{\sum \text{Count}_i}\) | **Weighted Average Sentiment** (`-1.0` to `+1.0`). Single emoji score is \(\frac{\text{Positive} - \text{Negative}}{\text{Total}}\). |
 | **Sentiment Intensity** | \(\frac{\sum (\text{Intensity}_i \times \text{Count}_i)}{\sum \text{Count}_i}\) | **Emotional Intensity / Non-Neutrality** (`0.0` to `1.0`). Single emoji intensity is \(\frac{\text{Positive} + \text{Negative}}{\text{Total}}\). Measures emotional involvement regardless of positive/negative polarity. |
+| **Polarization Index** | \(4 \times P_{\text{pos}} \times P_{\text{neg}}\) | **Emotional Conflict Index** (`0.0` to `1.0`). Detects whether a text contains contrasting positive and negative emojis simultaneously (`Harmonious` vs `Highly Polarized`). |
+| **Unicode Block Breakdown** | Aggregated by `Unicode block` | Groups emoji usage by official Unicode category (e.g. `Emoticons`, `Transport and Map Symbols`) with average sentiment per category. |
+| **Sentiment Progression Arc** | 4-Quarter Timeline / Segmented | Tracks the emotional trajectory across the text to detect trends (`Warming Up 📈`, `Cooling Down 📉`, `Consistently Positive`, or `Fluctuating 🌊`). |
 | **Emoji Density** | \(\frac{\text{Emojis}}{\text{Chars}} \times 1000\) / \(\frac{\text{Emojis}}{\text{Words}} \times 100\) | Frequency density of emojis per 1,000 characters and per 100 words. |
 | **Style Level** | Based on Emoji Density | Categorizes text expression style: `Text Only`, `Formal / Minimal`, `Balanced / Casual`, `Expressive / Interactive`, or `Heavy Emoji / Social`. |
 | **Shannon Entropy** | \(H = -\sum p_i \log_2(p_i)\) | Measures vocabulary diversity in bits. Higher entropy indicates a broader variety of emojis used rather than repeating a single emoji. |
@@ -45,13 +51,18 @@ cargo install --path .
 ### Analyze text via stdin:
 
 ```bash
-echo "Rust is amazing! 🎉🚀 But debugging can be tough 😭" | emo
+echo "Great news today! 🎉😍 Rocket launch 🚀! But oh no, servers crashed 😭💔..." | emo
 ```
 
-### Analyze files:
+### Analyze files or directories:
 
 ```bash
-emo document.txt README.md
+# Single file
+emo document.txt
+
+# Multiple files or entire folder
+emo README.md AGENTS.md
+emo path/to/logs_folder/
 ```
 
 ### Output JSON for automation:
@@ -69,12 +80,80 @@ Arguments:
   [FILE]...  File(s) to analyze. If empty or '-', reads from stdin.
 
 Options:
-  -j, --json          Output results as formatted JSON
-  -s, --summary       Output short one-line summary
-  -t, --top <TOP>     Number of top emojis to display in report [default: 10]
-      --no-color      Disable terminal color output
-  -h, --help          Print help
-  -V, --version       Print version
+  -j, --json              Output results as formatted JSON
+  -s, --summary           Output short one-line summary
+  -t, --top <TOP>         Number of top emojis and categories to display [default: 10]
+      --by-paragraph      Calculate sentiment progression by paragraph (\n\n)
+      --by-line           Calculate sentiment progression by line (\n)
+      --no-color          Disable terminal color output
+  -h, --help              Print help
+  -V, --version           Print version
+```
+
+## Sample Report Preview
+
+```text
+================================================
+  EMOJI SENTIMENT ANALYSIS REPORT 📊
+================================================
+ 📄 Total Text Characters : 84
+ 🔤 Total Words Scanned   : 15
+ 😊 Emojis Found         : 5 (5 Unique)
+ 🎯 Matched in Dataset    : 5 (Unmatched: 0)
+ 📈 Overall Score        : 0.345 (Positive 😊)
+ ⚡ Sentiment Intensity  : 0.742
+ ⚖️  Polarization Index   : 0.960 (Highly Polarized 🔥❄️)
+
+📐 Expression Metrics & Style
+ 🏷️  Text Style Level     : Heavy Emoji / Social
+ 📏 Emoji Density        : 59.52 per 1,000 chars / 33.33 per 100 words
+ 🌀 Diversity & Entropy   : 2.322 bits (Unique ratio: 100.0%)
+
+ Breakdown Distribution
+ [██████████████████████████████]
+ Positive: 3 (60.0%) | Neutral: 0 (0.0%) | Negative: 2 (40.0%)
+
+📂 Top Unicode Emoji Categories
+┌───────────────────────────┬───────┬────────────┬───────────┐
+│ Category / Block          ┆ Count ┆ Percentage ┆ Avg Score │
+╞═══════════════════════════╪═══════╪════════════╪═══════════╡
+│ Miscellaneous Symbols and ┆ 2     ┆ 40.0%      ┆ 0.309     │
+│ Pictographs               ┆       ┆            ┆           │
+│ Emoticons                 ┆ 2     ┆ 40.0%      ┆ 0.292     │
+│ Transport and Map Symbols ┆ 1     ┆ 20.0%      ┆ 0.525     │
+└───────────────────────────┴───────┴────────────┴───────────┘
+
+📈 Sentiment Progression Arc
+ Trend Status: Cooling Down 📉 (Positive → Negative)
+┌────────────────┬─────────────┬────────┬───────────┐
+│ Segment        ┆ Emoji Count ┆ Score  ┆ Intensity │
+╞════════════════╪═════════════╪════════╪═══════════╡
+│ Q1 (Beginning) ┆ 2           ┆ 0.709  ┆ 0.799     │
+│ Q2 (Early Mid) ┆ 2           ┆ 0.216  ┆ 0.702     │
+│ Q3 (Late Mid)  ┆ 1           ┆ -0.122 ┆ 0.707     │
+└────────────────┴─────────────┴────────┴───────────┘
+
+📌 Most Used Emojis
+┌───────┬────────────────────┬───────┬────────┬───────────┐
+│ Emoji ┆ Unicode Name       ┆ Count ┆ Score  ┆ Sentiment │
+╞═══════╪════════════════════╪═══════╪════════╪═══════════╡
+│ 🎉    ┆ PARTY POPPER       ┆ 1     ┆ 0.740  ┆ Positive  │
+│ 💔    ┆ BROKEN HEART       ┆ 1     ┆ -0.122 ┆ Negative  │
+│ 😍    ┆ SMILING FACE WITH  ┆ 1     ┆ 0.678  ┆ Positive  │
+│       ┆ HEART-SHAPED EYES  ┆       ┆        ┆           │
+│ 😭    ┆ LOUDLY CRYING FACE ┆ 1     ┆ -0.093 ┆ Negative  │
+│ 🚀    ┆ ROCKET             ┆ 1     ┆ 0.525  ┆ Positive  │
+└───────┴────────────────────┴───────┴────────┴───────────┘
+
+🔗 Frequent Emoji Combos
+┌────────────┬─────────────┐
+│ Combo Pair ┆ Occurrences │
+╞════════════╪═════════════╡
+│ 🎉😍       ┆ 1           │
+│ 😭💔       ┆ 1           │
+│ 😍🚀       ┆ 1           │
+│ 🚀😭       ┆ 1           │
+└────────────┴─────────────┘
 ```
 
 ## Development & Testing

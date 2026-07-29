@@ -1,4 +1,4 @@
-use crate::analyzer::AnalysisResult;
+use crate::analyzer::{AnalysisResult, MultiFileAnalysisResult};
 use colored::*;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, Color, ContentArrangement, Table};
@@ -29,15 +29,76 @@ pub fn render_output(result: &AnalysisResult, format: OutputFormat, no_color: bo
     }
 }
 
+pub fn render_multi_output(result: &MultiFileAnalysisResult, format: OutputFormat, no_color: bool) {
+    if no_color {
+        colored::control::set_override(false);
+    }
+
+    match format {
+        OutputFormat::Json => {
+            if let Ok(json) = serde_json::to_string_pretty(result) {
+                println!("{}", json);
+            }
+        }
+        OutputFormat::Summary => {
+            println!(
+                "Analyzed {} files | Total Emojis: {} | Aggregate Score: {:.3}",
+                result.file_reports.len(),
+                result.aggregate.total_emojis,
+                result.aggregate.overall_score
+            );
+        }
+        OutputFormat::Table => {
+            println!("{}", "================================================".dimmed());
+            println!(
+                "  {} {}",
+                "MULTI-FILE EMOJI BENCHMARK REPORT".bold().cyan(),
+                "📂".to_string()
+            );
+            println!("{}", "================================================".dimmed());
+
+            let mut comparison_table = Table::new();
+            comparison_table
+                .load_preset(UTF8_FULL)
+                .set_content_arrangement(ContentArrangement::Dynamic)
+                .set_header(vec!["File Name", "Total Emojis", "Overall Score", "Intensity", "Top Emoji"]);
+
+            for r in &result.file_reports {
+                let score_str = format!("{:.3}", r.overall_score);
+                let score_cell = if r.overall_score > 0.05 {
+                    Cell::new(score_str).fg(Color::Green)
+                } else if r.overall_score < -0.05 {
+                    Cell::new(score_str).fg(Color::Red)
+                } else {
+                    Cell::new(score_str).fg(Color::Blue)
+                };
+
+                comparison_table.add_row(vec![
+                    Cell::new(&r.file_name),
+                    Cell::new(r.total_emojis),
+                    score_cell,
+                    Cell::new(format!("{:.3}", r.overall_intensity)),
+                    Cell::new(&r.top_emoji),
+                ]);
+            }
+            println!("{}", comparison_table);
+
+            println!("\n{}", "--- Aggregate Summary Report ---".dimmed().bold());
+            render_table(&result.aggregate);
+        }
+    }
+}
+
 fn render_summary(result: &AnalysisResult) {
     let sentiment_label = get_sentiment_label(result.overall_score);
     println!(
-        "Emojis: {} ({} unique) | Score: {:.3} ({}) | Intensity: {:.3} | Style: {}",
+        "Emojis: {} ({} unique) | Score: {:.3} ({}) | Intensity: {:.3} | Volatility σ: {:.3} | Style: {}",
         result.total_emojis,
         result.unique_emojis,
         result.overall_score,
         sentiment_label,
         result.overall_intensity,
+        result.volatility_std_dev,
         result.style_level
     );
 }
@@ -89,12 +150,27 @@ fn render_table(result: &AnalysisResult) {
         " ⚡ Sentiment Intensity  : {:.3}",
         result.overall_intensity
     );
+    println!(
+        " 🌊 Sentiment Volatility  : σ = {:.3} ({})",
+        result.volatility_std_dev,
+        result.volatility_status.yellow()
+    );
+    println!(
+        " ⚖️  Polarization Index   : {:.3} ({})",
+        result.polarization_index,
+        result.polarization_status.magenta().bold()
+    );
+    println!(
+        " 💭 Ambiguity & Neutral   : {:.1}% Neutral ({})",
+        result.ambiguity_index,
+        result.ambiguity_status.blue()
+    );
 
-    // Advanced Metrics: Density & Diversity & Style
-    println!("\n{}", "📐 Expression Metrics & Style".bold().underline());
+    // Advanced Metrics: Density & Diversity & Style & Position
+    println!("\n{}", "📐 Expression Metrics & Placement".bold().underline());
     println!(
         " 🏷️  Text Style Level     : {}",
-        result.style_level.bold().magenta()
+        result.style_level.bold().cyan()
     );
     println!(
         " 📏 Emoji Density        : {:.2} per 1,000 chars / {:.2} per 100 words",
@@ -105,9 +181,61 @@ fn render_table(result: &AnalysisResult) {
         result.entropy,
         result.diversity_ratio * 100.0
     );
+    println!(
+        " 📍 Placement Bias        : Avg Pos: {:.2} ({})",
+        result.position_bias.avg_position,
+        result.position_bias.bias_status.bold().magenta()
+    );
+    println!(
+        "    └─ Distribution       : Front: {:.1}% | Mid: {:.1}% | End: {:.1}%",
+        result.position_bias.front_pct,
+        result.position_bias.mid_pct,
+        result.position_bias.end_pct
+    );
 
     // Distribution Bar
     render_distribution_bar(result);
+
+    // Unicode Block Distribution
+    if !result.block_stats.is_empty() {
+        println!("\n{}", "📂 Top Unicode Emoji Categories".bold().underline());
+        let mut block_table = Table::new();
+        block_table
+            .load_preset(UTF8_FULL)
+            .set_content_arrangement(ContentArrangement::Dynamic)
+            .set_header(vec!["Category / Block", "Count", "Percentage", "Avg Score"]);
+
+        for block in &result.block_stats {
+            block_table.add_row(vec![
+                Cell::new(&block.block_name),
+                Cell::new(block.count),
+                Cell::new(format!("{:.1}%", block.percentage)),
+                Cell::new(format!("{:.3}", block.avg_score)),
+            ]);
+        }
+        println!("{}", block_table);
+    }
+
+    // Sentiment Progression / Arc
+    if !result.progression.segments.is_empty() {
+        println!("\n{}", "📈 Sentiment Progression Arc".bold().underline());
+        println!(" Trend Status: {}", result.progression.trend_status.bold().yellow());
+        let mut arc_table = Table::new();
+        arc_table
+            .load_preset(UTF8_FULL)
+            .set_content_arrangement(ContentArrangement::Dynamic)
+            .set_header(vec!["Segment", "Emoji Count", "Score", "Intensity"]);
+
+        for seg in &result.progression.segments {
+            arc_table.add_row(vec![
+                Cell::new(&seg.label),
+                Cell::new(seg.emoji_count),
+                Cell::new(format!("{:.3}", seg.score)),
+                Cell::new(format!("{:.3}", seg.intensity)),
+            ]);
+        }
+        println!("{}", arc_table);
+    }
 
     // Top Emojis Table
     if !result.top_used.is_empty() {

@@ -1,7 +1,16 @@
+use charabia::Segment;
+
 use crate::dataset::EmojiDataset;
 use serde::Serialize;
 use std::collections::HashMap;
 use unicode_segmentation::UnicodeSegmentation;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SplitMode {
+    Timeline,
+    Paragraph,
+    Line,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EmojiStat {
@@ -28,6 +37,48 @@ pub struct EmojiCombo {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct UnicodeBlockStat {
+    pub block_name: String,
+    pub count: usize,
+    pub percentage: f64,
+    pub avg_score: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SentimentSegment {
+    pub label: String,
+    pub score: f64,
+    pub intensity: f64,
+    pub emoji_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SentimentProgression {
+    pub segments: Vec<SentimentSegment>,
+    pub trend_status: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PositionBias {
+    pub avg_position: f64,
+    pub front_pct: f64,
+    pub mid_pct: f64,
+    pub end_pct: f64,
+    pub bias_status: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FileReport {
+    pub file_name: String,
+    pub total_chars: usize,
+    pub total_words: usize,
+    pub total_emojis: usize,
+    pub overall_score: f64,
+    pub overall_intensity: f64,
+    pub top_emoji: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct AnalysisResult {
     pub total_chars: usize,
     pub total_words: usize,
@@ -45,12 +96,27 @@ pub struct AnalysisResult {
     pub style_level: String,
     pub entropy: f64,
     pub diversity_ratio: f64,
+    pub polarization_index: f64,
+    pub polarization_status: String,
+    pub volatility_std_dev: f64,
+    pub volatility_status: String,
+    pub ambiguity_index: f64,
+    pub ambiguity_status: String,
+    pub position_bias: PositionBias,
+    pub block_stats: Vec<UnicodeBlockStat>,
+    pub progression: SentimentProgression,
     pub bursts: Vec<EmojiBurst>,
     pub combos: Vec<EmojiCombo>,
     pub top_used: Vec<EmojiStat>,
     pub top_positive: Vec<EmojiStat>,
     pub top_negative: Vec<EmojiStat>,
     pub all_stats: Vec<EmojiStat>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MultiFileAnalysisResult {
+    pub file_reports: Vec<FileReport>,
+    pub aggregate: AnalysisResult,
 }
 
 pub struct Analyzer<'a> {
@@ -63,17 +129,35 @@ impl<'a> Analyzer<'a> {
     }
 
     pub fn analyze(&self, text: &str, top_n: usize) -> AnalysisResult {
+        self.analyze_with_mode(text, top_n, SplitMode::Timeline)
+    }
+
+    pub fn analyze_with_mode(&self, text: &str, top_n: usize, split_mode: SplitMode) -> AnalysisResult {
         let total_chars = text.chars().count();
-        let total_words = text.split_whitespace().count();
+        let total_words = text
+            .segment_str()
+            .filter(|t| !t.trim().is_empty())
+            .count();
 
         let mut counts: HashMap<String, usize> = HashMap::new();
         let mut emoji_sequence: Vec<String> = Vec::new();
+        let mut emoji_positions: Vec<f64> = Vec::new();
+
+        let mut current_char_idx = 0usize;
 
         for grapheme in text.graphemes(true) {
-            if self.dataset.get_by_char(grapheme).is_some() || is_likely_emoji(grapheme) {
+            let is_em = self.dataset.get_by_char(grapheme).is_some() || is_likely_emoji(grapheme);
+            if is_em {
                 *counts.entry(grapheme.to_string()).or_insert(0) += 1;
                 emoji_sequence.push(grapheme.to_string());
+                let rel_pos = if total_chars > 0 {
+                    current_char_idx as f64 / total_chars as f64
+                } else {
+                    0.5
+                };
+                emoji_positions.push(rel_pos);
             }
+            current_char_idx += grapheme.chars().count();
         }
 
         let mut all_stats = Vec::new();
@@ -85,6 +169,8 @@ impl<'a> Analyzer<'a> {
         let mut positive_count = 0usize;
         let mut neutral_count = 0usize;
         let mut negative_count = 0usize;
+
+        let mut block_counts: HashMap<String, (usize, f64)> = HashMap::new();
 
         for (emoji_str, count) in &counts {
             total_emojis += count;
@@ -104,6 +190,10 @@ impl<'a> Analyzer<'a> {
                     neutral_count += count;
                 }
 
+                let entry = block_counts.entry(info.block.clone()).or_insert((0, 0.0));
+                entry.0 += count;
+                entry.1 += score * (*count as f64);
+
                 all_stats.push(EmojiStat {
                     emoji: emoji_str.clone(),
                     name: info.name.clone(),
@@ -114,6 +204,9 @@ impl<'a> Analyzer<'a> {
                 });
             } else {
                 unmatched_emojis_count += count;
+                let entry = block_counts.entry("Unknown Category".to_string()).or_insert((0, 0.0));
+                entry.0 += count;
+
                 all_stats.push(EmojiStat {
                     emoji: emoji_str.clone(),
                     name: "UNKNOWN EMOJI".to_string(),
@@ -135,6 +228,100 @@ impl<'a> Analyzer<'a> {
             total_weighted_intensity / (matched_emojis_count as f64)
         } else {
             0.0
+        };
+
+        // Sentiment Volatility (Std Dev \sigma)
+        let mut variance_sum = 0.0f64;
+        if matched_emojis_count > 0 {
+            for stat in &all_stats {
+                if stat.in_dataset {
+                    let diff = stat.score - overall_score;
+                    variance_sum += (diff * diff) * (stat.count as f64);
+                }
+            }
+        }
+        let volatility_std_dev = if matched_emojis_count > 0 {
+            (variance_sum / matched_emojis_count as f64).sqrt()
+        } else {
+            0.0
+        };
+
+        let volatility_status = if volatility_std_dev < 0.2 {
+            "Monotone / Highly Consistent".to_string()
+        } else if volatility_std_dev < 0.4 {
+            "Balanced Volatility".to_string()
+        } else {
+            "High Volatility / Emotional Swing 🌊".to_string()
+        };
+
+        // Ambiguity & Neutrality Index
+        let ambiguity_index = if total_emojis > 0 {
+            (neutral_count as f64 / total_emojis as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let ambiguity_status = if ambiguity_index > 50.0 {
+            "Subtle / Ambiguous 💭".to_string()
+        } else if ambiguity_index >= 20.0 {
+            "Balanced Expression".to_string()
+        } else {
+            "Direct & Explicit 🎯".to_string()
+        };
+
+        // Position Bias
+        let mut sum_pos = 0.0f64;
+        let mut front_cnt = 0usize;
+        let mut mid_cnt = 0usize;
+        let mut end_cnt = 0usize;
+
+        for pos in &emoji_positions {
+            sum_pos += *pos;
+            if *pos < 0.33 {
+                front_cnt += 1;
+            } else if *pos < 0.66 {
+                mid_cnt += 1;
+            } else {
+                end_cnt += 1;
+            }
+        }
+
+        let avg_position = if !emoji_positions.is_empty() {
+            sum_pos / emoji_positions.len() as f64
+        } else {
+            0.5
+        };
+
+        let front_pct = if !emoji_positions.is_empty() {
+            (front_cnt as f64 / emoji_positions.len() as f64) * 100.0
+        } else {
+            0.0
+        };
+        let mid_pct = if !emoji_positions.is_empty() {
+            (mid_cnt as f64 / emoji_positions.len() as f64) * 100.0
+        } else {
+            0.0
+        };
+        let end_pct = if !emoji_positions.is_empty() {
+            (end_cnt as f64 / emoji_positions.len() as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let bias_status = if front_pct >= 50.0 {
+            "Front-loaded Preferred".to_string()
+        } else if end_pct >= 50.0 {
+            "Trailing / End-loaded Preferred".to_string()
+        } else {
+            "Balanced Placement".to_string()
+        };
+
+        let position_bias = PositionBias {
+            avg_position,
+            front_pct,
+            mid_pct,
+            end_pct,
+            bias_status,
         };
 
         // Entropy & Diversity
@@ -179,8 +366,53 @@ impl<'a> Analyzer<'a> {
             "Heavy Emoji / Social".to_string()
         };
 
-        // Calculate Bursts & Streaks
-        let mut bursts_map: HashMap<String, (usize, usize)> = HashMap::new(); // emoji -> (max_streak, total_bursts)
+        // Polarization Index: 4 * pos_ratio * neg_ratio
+        let pos_ratio = if total_emojis > 0 {
+            positive_count as f64 / total_emojis as f64
+        } else {
+            0.0
+        };
+        let neg_ratio = if total_emojis > 0 {
+            negative_count as f64 / total_emojis as f64
+        } else {
+            0.0
+        };
+        let polarization_index = (4.0 * pos_ratio * neg_ratio).min(1.0);
+
+        let polarization_status = if polarization_index < 0.1 {
+            "Harmonious / Unified".to_string()
+        } else if polarization_index < 0.4 {
+            "Slight Contrast".to_string()
+        } else if polarization_index < 0.7 {
+            "Mixed / Controversial".to_string()
+        } else {
+            "Highly Polarized 🔥❄️".to_string()
+        };
+
+        // Unicode Block Distribution
+        let mut block_stats = Vec::new();
+        for (block_name, (cnt, score_sum)) in block_counts {
+            let percentage = if total_emojis > 0 {
+                (cnt as f64 / total_emojis as f64) * 100.0
+            } else {
+                0.0
+            };
+            let avg_score = if cnt > 0 { score_sum / cnt as f64 } else { 0.0 };
+            block_stats.push(UnicodeBlockStat {
+                block_name,
+                count: cnt,
+                percentage,
+                avg_score,
+            });
+        }
+        block_stats.sort_by(|a, b| b.count.cmp(&a.count));
+        block_stats.truncate(top_n);
+
+        // Sentiment Progression
+        let progression = self.calculate_progression(text, &emoji_sequence, split_mode);
+
+        // Bursts & Streaks
+        let mut bursts_map: HashMap<String, (usize, usize)> = HashMap::new();
         if !emoji_sequence.is_empty() {
             let mut current_emoji = &emoji_sequence[0];
             let mut current_streak = 1usize;
@@ -221,7 +453,7 @@ impl<'a> Analyzer<'a> {
         }
         bursts.sort_by(|a, b| b.max_streak.cmp(&a.max_streak).then_with(|| b.total_bursts.cmp(&a.total_bursts)));
 
-        // Calculate Combos (Bigrams)
+        // Combos (Bigrams)
         let mut combo_counts: HashMap<String, usize> = HashMap::new();
         for window in emoji_sequence.windows(2) {
             let combo_key = format!("{}{}", window[0], window[1]);
@@ -235,7 +467,7 @@ impl<'a> Analyzer<'a> {
         combos.sort_by(|a, b| b.count.cmp(&a.count));
         combos.truncate(top_n);
 
-        // Sort for top lists
+        // Top Used, Positive, Negative
         let mut top_used = all_stats.clone();
         top_used.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.emoji.cmp(&b.emoji)));
         top_used.truncate(top_n);
@@ -283,6 +515,15 @@ impl<'a> Analyzer<'a> {
             style_level,
             entropy,
             diversity_ratio,
+            polarization_index,
+            polarization_status,
+            volatility_std_dev,
+            volatility_status,
+            ambiguity_index,
+            ambiguity_status,
+            position_bias,
+            block_stats,
+            progression,
             bursts,
             combos,
             top_used,
@@ -290,6 +531,160 @@ impl<'a> Analyzer<'a> {
             top_negative,
             all_stats,
         }
+    }
+
+    pub fn analyze_multiple(&self, files: &[(&str, &str)], top_n: usize, split_mode: SplitMode) -> MultiFileAnalysisResult {
+        let mut file_reports = Vec::new();
+        let mut combined_text = String::new();
+
+        for (file_name, content) in files {
+            let res = self.analyze_with_mode(content, top_n, split_mode);
+            let top_emoji = res.top_used.first().map(|e| e.emoji.clone()).unwrap_or_else(|| "None".to_string());
+            file_reports.push(FileReport {
+                file_name: file_name.to_string(),
+                total_chars: res.total_chars,
+                total_words: res.total_words,
+                total_emojis: res.total_emojis,
+                overall_score: res.overall_score,
+                overall_intensity: res.overall_intensity,
+                top_emoji,
+            });
+            combined_text.push_str(content);
+            combined_text.push('\n');
+        }
+
+        let aggregate = self.analyze_with_mode(&combined_text, top_n, split_mode);
+
+        MultiFileAnalysisResult {
+            file_reports,
+            aggregate,
+        }
+    }
+
+    fn calculate_progression(&self, text: &str, emoji_sequence: &[String], mode: SplitMode) -> SentimentProgression {
+        let mut segments = Vec::new();
+
+        match mode {
+            SplitMode::Paragraph => {
+                let paras: Vec<&str> = text.split("\n\n").filter(|p| !p.trim().is_empty()).collect();
+                for (idx, para) in paras.iter().enumerate() {
+                    let seg_result = self.analyze_text_chunk(para);
+                    segments.push(SentimentSegment {
+                        label: format!("Paragraph {}", idx + 1),
+                        score: seg_result.0,
+                        intensity: seg_result.1,
+                        emoji_count: seg_result.2,
+                    });
+                }
+            }
+            SplitMode::Line => {
+                let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+                for (idx, line) in lines.iter().enumerate() {
+                    let seg_result = self.analyze_text_chunk(line);
+                    segments.push(SentimentSegment {
+                        label: format!("Line {}", idx + 1),
+                        score: seg_result.0,
+                        intensity: seg_result.1,
+                        emoji_count: seg_result.2,
+                    });
+                }
+            }
+            SplitMode::Timeline => {
+                let total = emoji_sequence.len();
+                if total > 0 {
+                    let chunk_size = (total as f64 / 4.0).ceil() as usize;
+                    let labels = ["Q1 (Beginning)", "Q2 (Early Mid)", "Q3 (Late Mid)", "Q4 (Ending)"];
+                    for (i, label) in labels.iter().enumerate() {
+                        let start = (i * chunk_size).min(total);
+                        let end = ((i + 1) * chunk_size).min(total);
+                        if start < end {
+                            let slice = &emoji_sequence[start..end];
+                            let seg_result = self.analyze_emoji_slice(slice);
+                            segments.push(SentimentSegment {
+                                label: label.to_string(),
+                                score: seg_result.0,
+                                intensity: seg_result.1,
+                                emoji_count: seg_result.2,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        let trend_status = compute_trend_status(&segments);
+
+        SentimentProgression {
+            segments,
+            trend_status,
+        }
+    }
+
+    fn analyze_text_chunk(&self, chunk: &str) -> (f64, f64, usize) {
+        let mut count = 0usize;
+        let mut score_sum = 0.0f64;
+        let mut intensity_sum = 0.0f64;
+
+        for grapheme in chunk.graphemes(true) {
+            if let Some(info) = self.dataset.get_by_char(grapheme) {
+                count += 1;
+                score_sum += info.score();
+                intensity_sum += info.intensity();
+            }
+        }
+
+        let score = if count > 0 { score_sum / count as f64 } else { 0.0 };
+        let intensity = if count > 0 { intensity_sum / count as f64 } else { 0.0 };
+
+        (score, intensity, count)
+    }
+
+    fn analyze_emoji_slice(&self, slice: &[String]) -> (f64, f64, usize) {
+        let mut count = 0usize;
+        let mut score_sum = 0.0f64;
+        let mut intensity_sum = 0.0f64;
+
+        for grapheme in slice {
+            if let Some(info) = self.dataset.get_by_char(grapheme) {
+                count += 1;
+                score_sum += info.score();
+                intensity_sum += info.intensity();
+            }
+        }
+
+        let score = if count > 0 { score_sum / count as f64 } else { 0.0 };
+        let intensity = if count > 0 { intensity_sum / count as f64 } else { 0.0 };
+
+        (score, intensity, count)
+    }
+}
+
+fn compute_trend_status(segments: &[SentimentSegment]) -> String {
+    if segments.is_empty() {
+        return "N/A".to_string();
+    }
+    let valid_segs: Vec<&SentimentSegment> = segments.iter().filter(|s| s.emoji_count > 0).collect();
+    if valid_segs.len() < 2 {
+        return "Stable / Single Phase".to_string();
+    }
+
+    let first = valid_segs.first().unwrap().score;
+    let last = valid_segs.last().unwrap().score;
+    let diff = last - first;
+
+    let all_positive = valid_segs.iter().all(|s| s.score > 0.05);
+    let all_negative = valid_segs.iter().all(|s| s.score < -0.05);
+
+    if all_positive {
+        "Consistently Positive 😊".to_string()
+    } else if all_negative {
+        "Consistently Negative 🙁".to_string()
+    } else if diff > 0.3 {
+        "Warming Up 📈 (Negative → Positive)".to_string()
+    } else if diff < -0.3 {
+        "Cooling Down 📉 (Positive → Negative)".to_string()
+    } else {
+        "Fluctuating 🌊".to_string()
     }
 }
 
@@ -335,19 +730,42 @@ mod tests {
     }
 
     #[test]
-    fn test_bursts_and_combos() {
+    fn test_polarization_and_progression() {
         let dataset = EmojiDataset::load_embedded().unwrap();
         let analyzer = Analyzer::new(&dataset);
 
-        let text = "Super fast 🔥🔥🔥! Rocket launch 🚀🚀🔥";
+        let text = "Great news! 🎉😍 Bad news! 😭💔";
         let result = analyzer.analyze(text, 5);
 
-        assert!(!result.bursts.is_empty());
-        let fire_burst = result.bursts.iter().find(|b| b.emoji == "🔥").unwrap();
-        assert_eq!(fire_burst.max_streak, 3);
+        assert!(result.polarization_index > 0.5);
+        assert!(!result.block_stats.is_empty());
+        assert!(!result.progression.segments.is_empty());
+    }
 
-        assert!(!result.combos.is_empty());
-        let fire_combo = result.combos.iter().find(|c| c.combo == "🔥🔥").unwrap();
-        assert!(fire_combo.count >= 2);
+    #[test]
+    fn test_multi_file_analysis() {
+        let dataset = EmojiDataset::load_embedded().unwrap();
+        let analyzer = Analyzer::new(&dataset);
+
+        let files = [
+            ("file1.txt", "Rust is awesome 🎉🚀"),
+            ("file2.txt", "Bugs are annoying 😭💔"),
+        ];
+
+        let res = analyzer.analyze_multiple(&files, 5, SplitMode::Timeline);
+        assert_eq!(res.file_reports.len(), 2);
+        assert_eq!(res.aggregate.total_emojis, 4);
+    }
+
+    #[test]
+    fn test_cjk_word_segmentation() {
+        let dataset = EmojiDataset::load_embedded().unwrap();
+        let analyzer = Analyzer::new(&dataset);
+
+        let text = "我喜歡用 Rust 寫程式 🎉🚀";
+        let result = analyzer.analyze(text, 5);
+
+        assert!(result.total_words > 1);
+        assert_eq!(result.total_emojis, 2);
     }
 }
