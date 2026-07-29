@@ -1,0 +1,28 @@
+emotion_category,emotion_id,sentiment_polarity,mapped_emojis,description
+Admiration,0,Positive,🤩 👏 🙌 👑 🏆 🥇 🎓 ✊ 🦚 🦁,Feeling of approval respect and high regard
+Amusement,1,Positive,😂 🤣 😸 🤪 😜 🦊 🦝 🥸 🎮 👾,Finding something funny or entertaining
+Anger,2,Negative,😡 🤬 👿 💢 😤 😠,Strong feeling of displeasure or hostility
+Annoyance,3,Negative,😒 🙄 😑 😤 🤌 🥱,Mild anger or irritation
+Approval,4,Positive,👍 ✅ 👌 💯 🤝 🫡,Agreeing endorsing or expressing satisfaction
+Caring,5,Positive,🤗 🫂 💗 🩹 💌 🩺,Expressing warmth affection or concern
+Confusion,6,Neutral,🤔 😕 ❓ 🤷 🤨 🤏,State of feeling bewildered or uncertain
+Curiosity,7,Neutral,🧐 🔍 👀 🕵️ 🧪 🧬,Eager to know or learn something
+Desire,8,Positive,😍 🤤 😋 💸 🤑,Strong feeling of wanting something
+Disappointment,9,Negative,😞 😓 📉 💔 🥀,Sadness or displeasure caused by unfulfilled expectations
+Disapproval,10,Negative,👎 ❌ 🙅 🚫,Expressing unfavorable opinion or rejection
+Disgust,11,Negative,🤢 🤮 💩 😷,Feeling of revulsion or strong distaste
+Embarrassment,12,Negative,😳 🙈 🫣 😅 🫠,Feeling self-conscious ashamed or awkward
+Excitement,13,Positive,🥳 🎉 🚀 🔥 ✨ 🍾 🪩 🪄 🪅,Feeling eager enthusiasm and energy
+Fear,14,Negative,😱 😨 😰 👻,Anxious or apprehensive feeling of danger
+Gratitude,15,Positive,🙏 🙇 💐 💖 🥹,Feeling of thankfulness and appreciation
+Grief,16,Negative,😭 💔 ⚰️ 🥀 🕊️,Deep sorrow or feeling of mourning
+Joy,17,Positive,😊 😃 😄 💃 🕺 🥑 🥞 🧋 🥐 🫐,Feeling of great pleasure and happiness
+Love,18,Positive,❤️ 🥰 💖 💕 🖤 🤍 🤎 🫶 💏,Strong affection and personal attachment
+Nervousness,19,Negative,😬 😰 💧 🥶,State of being worried alarmed or uneasy
+Optimism,20,Positive,🌟 ☀️ 🌈 🤞 🕯️ 🧿,Hopefulness and confidence about the future
+Pride,21,Positive,🦚 🥇 🦁 ✊ 🎓,Feeling of deep satisfaction from achievements
+Realization,22,Neutral,💡 🤯 🎯 🫵,Becoming aware of or understanding something clearly
+Relief,23,Positive,😮‍💨 😌 🧘 🥲,Reassurance and relaxation following anxiety
+Remorse,24,Negative,🥺 🙇 😔 😿,Deep regret or guilt for a wrong committed
+Sadness,25,Negative,😢 😭 😔 😿 🌧️,Feeling unhappy sorrowful or mournful
+Surprise,26,Neutral,😲 😮 🤯 ‼️ 🚨 🛸,Feeling astonished by something unexpected

@@ -2,6 +2,8 @@ use crate::analyzer::{AnalysisResult, MultiFileAnalysisResult};
 use colored::*;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, Color, ContentArrangement, Table};
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 pub enum OutputFormat {
     Table,
@@ -61,7 +63,13 @@ pub fn render_multi_output(result: &MultiFileAnalysisResult, format: OutputForma
             comparison_table
                 .load_preset(UTF8_FULL)
                 .set_content_arrangement(ContentArrangement::Dynamic)
-                .set_header(vec!["File Name", "Total Emojis", "Overall Score", "Intensity", "Top Emoji"]);
+                .set_header(vec![
+                    "File Name",
+                    "Total Emojis",
+                    "Overall Score\n[-1.0 ~ +1.0]",
+                    "Intensity\n[0.0 ~ 1.0]",
+                    "Top Emoji",
+                ]);
 
             for r in &result.file_reports {
                 let score_str = format!("{:.3}", r.overall_score);
@@ -78,7 +86,7 @@ pub fn render_multi_output(result: &MultiFileAnalysisResult, format: OutputForma
                     Cell::new(r.total_emojis),
                     score_cell,
                     Cell::new(format!("{:.3}", r.overall_intensity)),
-                    Cell::new(&r.top_emoji),
+                    Cell::new(sanitize_emoji_for_cell(&r.top_emoji)),
                 ]);
             }
             println!("{}", comparison_table);
@@ -142,28 +150,33 @@ fn render_table(result: &AnalysisResult) {
     };
 
     println!(
-        " 📈 Overall Score        : {} ({})",
+        " 📈 Overall Score        : {} ({}) {}",
         score_colored,
-        get_sentiment_label(result.overall_score)
+        get_sentiment_label(result.overall_score),
+        "[-1.0 ~ +1.0]".dimmed()
     );
     println!(
-        " ⚡ Sentiment Intensity  : {:.3}",
-        result.overall_intensity
+        " ⚡ Sentiment Intensity  : {:.3} {}",
+        result.overall_intensity,
+        "[0.0 ~ 1.0]".dimmed()
     );
     println!(
-        " 🌊 Sentiment Volatility  : σ = {:.3} ({})",
+        " 🌊 Sentiment Volatility  : σ = {:.3} ({}) {}",
         result.volatility_std_dev,
-        result.volatility_status.yellow()
+        result.volatility_status.yellow(),
+        "[≥ 0.0]".dimmed()
     );
     println!(
-        " ⚖️  Polarization Index   : {:.3} ({})",
+        " ⚖️  Polarization Index   : {:.3} ({}) {}",
         result.polarization_index,
-        result.polarization_status.magenta().bold()
+        result.polarization_status.magenta().bold(),
+        "[0.0 ~ 1.0]".dimmed()
     );
     println!(
-        " 💭 Ambiguity & Neutral   : {:.1}% Neutral ({})",
+        " 💭 Ambiguity & Neutral   : {:.1}% Neutral ({}) {}",
         result.ambiguity_index,
-        result.ambiguity_status.blue()
+        result.ambiguity_status.blue(),
+        "[0.0% ~ 100.0%]".dimmed()
     );
 
     // Advanced Metrics: Density & Diversity & Style & Position
@@ -196,6 +209,28 @@ fn render_table(result: &AnalysisResult) {
     // Distribution Bar
     render_distribution_bar(result);
 
+    // GoEmotions Fine-Grained Emotion Spectrum
+    if let Some(profile) = &result.emotion_profile {
+        if !profile.top_emotions.is_empty() {
+            println!("\n{}", "🎭 Fine-Grained Emotion Spectrum (GoEmotions)".bold().underline());
+            println!(" Primary Emotion: {}", profile.primary_emotion.bold().magenta());
+            let mut emo_table = Table::new();
+            emo_table
+                .load_preset(UTF8_FULL)
+                .set_content_arrangement(ContentArrangement::Dynamic)
+                .set_header(vec!["Emotion Category", "Emoji Count", "Percentage"]);
+
+            for em in profile.top_emotions.iter().take(8) {
+                emo_table.add_row(vec![
+                    Cell::new(&em.emotion),
+                    Cell::new(em.count),
+                    Cell::new(format!("{:.1}%", em.percentage)),
+                ]);
+            }
+            println!("{}", emo_table);
+        }
+    }
+
     // Unicode Block Distribution
     if !result.block_stats.is_empty() {
         println!("\n{}", "📂 Top Unicode Emoji Categories".bold().underline());
@@ -203,7 +238,7 @@ fn render_table(result: &AnalysisResult) {
         block_table
             .load_preset(UTF8_FULL)
             .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(vec!["Category / Block", "Count", "Percentage", "Avg Score"]);
+            .set_header(vec!["Category / Block", "Count", "Percentage", "Avg Score\n[-1.0 ~ +1.0]"]);
 
         for block in &result.block_stats {
             block_table.add_row(vec![
@@ -224,7 +259,7 @@ fn render_table(result: &AnalysisResult) {
         arc_table
             .load_preset(UTF8_FULL)
             .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(vec!["Segment", "Emoji Count", "Score", "Intensity"]);
+            .set_header(vec!["Segment", "Emoji Count", "Score\n[-1.0 ~ +1.0]", "Intensity\n[0.0 ~ 1.0]"]);
 
         for seg in &result.progression.segments {
             arc_table.add_row(vec![
@@ -244,7 +279,7 @@ fn render_table(result: &AnalysisResult) {
         table
             .load_preset(UTF8_FULL)
             .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(vec!["Emoji", "Unicode Name", "Count", "Score", "Sentiment"]);
+            .set_header(vec!["Emoji", "Unicode Name", "Count", "Score\n[-1.0 ~ +1.0]", "Sentiment"]);
 
         for stat in &result.top_used {
             let score_cell = if stat.in_dataset {
@@ -271,7 +306,7 @@ fn render_table(result: &AnalysisResult) {
             };
 
             table.add_row(vec![
-                Cell::new(&stat.emoji),
+                Cell::new(sanitize_emoji_for_cell(&stat.emoji)),
                 Cell::new(&stat.name),
                 Cell::new(stat.count),
                 score_cell,
@@ -292,7 +327,7 @@ fn render_table(result: &AnalysisResult) {
 
         for burst in result.bursts.iter().take(5) {
             burst_table.add_row(vec![
-                Cell::new(&burst.emoji),
+                Cell::new(sanitize_emoji_for_cell(&burst.emoji)),
                 Cell::new(&burst.name),
                 Cell::new(format!("{}x", burst.max_streak)),
                 Cell::new(burst.total_bursts),
@@ -312,7 +347,7 @@ fn render_table(result: &AnalysisResult) {
 
         for combo in result.combos.iter().take(5) {
             combo_table.add_row(vec![
-                Cell::new(&combo.combo),
+                Cell::new(sanitize_emoji_for_cell(&combo.combo)),
                 Cell::new(combo.count),
             ]);
         }
@@ -355,6 +390,31 @@ fn render_distribution_bar(result: &AnalysisResult) {
     );
 }
 
+pub fn sanitize_emoji_for_cell(s: &str) -> String {
+    let mut result = String::new();
+    for g in s.graphemes(true) {
+        let w = g.width();
+        let is_em = g.chars().any(|c| {
+            let cp = c as u32;
+            matches!(
+                cp,
+                0x2600..=0x27BF
+                    | 0x1F300..=0x1F5FF
+                    | 0x1F600..=0x1F64F
+                    | 0x1F680..=0x1F6FF
+                    | 0x1F900..=0x1F9FF
+                    | 0x1FA70..=0x1FAFF
+            )
+        });
+        result.push_str(g);
+        if is_em && w == 1 {
+            // Soft hyphen U+00AD adds +1 to unicode_width for comfy-table, but is invisible/0-width in terminal!
+            result.push('\u{00AD}');
+        }
+    }
+    result
+}
+
 fn get_sentiment_label(score: f64) -> ColoredString {
     if score >= 0.5 {
         "Very Positive 😃".bold().green()
@@ -366,5 +426,22 @@ fn get_sentiment_label(score: f64) -> ColoredString {
         "Negative 🙁".red()
     } else {
         "Very Negative 😭".bold().red()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_comfy_table_emoji_alignment() {
+        let mut table = Table::new();
+        table.set_header(vec!["File", "Top Emoji"]);
+        table.add_row(vec!["file1.txt", &sanitize_emoji_for_cell("✨")]);
+        table.add_row(vec!["file2.txt", &sanitize_emoji_for_cell("⚙️")]);
+
+        let rendered = table.to_string();
+        assert!(rendered.contains("✨"));
+        assert!(rendered.contains("⚙️"));
     }
 }

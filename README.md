@@ -176,4 +176,37 @@ The bundled `Emoji_Sentiment_Data_v1.0.csv` is from:
 - Paper: https://doi.org/10.1371/journal.pone.0144296
 - Dataset License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
+## Related Emoji Sentiment & Emotion Datasets
+
+While `emo` relies on **Emoji Sentiment Ranking 1.0** for compiled zero-dependency runtime evaluation, the NLP research community offers several notable benchmark datasets for emoji sentiment and emotion analysis:
+
+1. **Emoji Sentiment Ranking 1.0** *(Built-in)*
+   - **Authors**: Petra Kralj Novak et al. (2015)
+   - **Focus**: Evaluates sentiment polarity scores (`-1.0` to `+1.0`) for 751 common emojis based on 1.6M+ annotated tweets.
+   - **Resource**: [CLARIN.SI hdl:11356/1048](http://hdl.handle.net/11356/1048) / [PLOS ONE Paper](https://doi.org/10.1371/journal.pone.0144296)
+
+2. **TweetEval / SemEval-2018 Task 2 (Emoji Prediction)**
+   - **Authors**: Barbieri et al. (2018)
+   - **Focus**: Standard NLP benchmark for predicting appropriate emoji usage from text context across 20 common emoji classes.
+   - **Resource**: Available on Hugging Face Datasets (`tweet_eval` dataset, `emoji` subset).
+
+3. **DeepMoji Dataset (Distant Supervision Corpus)**
+   - **Authors**: Felbo et al. (EMNLP 2017)
+   - **Focus**: 1.2 billion Twitter posts categorized across 64 emoji labels. Widely used for transfer learning, sarcasm detection, and sentiment representations.
+   - **Resource**: [GitHub - bfelbo/DeepMoji](https://github.com/bfelbo/DeepMoji)
+
+4. **EmojiNet (Emoji Sense & Polarity Knowledge Base)**
+   - **Authors**: Knoesis Institute (Sanjaya et al.)
+   - **Focus**: Structured knowledge base linking over 2,300+ emojis to BabelNet synsets, sentiment polarities, and word sense disambiguation (e.g. 🙏 as praying vs high-five).
+   - **Resource**: [emojinet.knoesis.org](http://emojinet.knoesis.org/)
+
+5. **Google GoEmotions (Fine-Grained Emotion Dataset)**
+   - **Authors**: Google Research (Demszky et al., 2020)
+   - **Focus**: 58k Reddit comments labeled across 27 fine-grained emotions plus Neutral, commonly mapped 1-to-1 to emoji representations.
+   - **Resource**: Available on Hugging Face (`google/go_emotions`).
+
+6. **Social Media Slang & Emoji Sentiment Corpus**
+   - **Focus**: UGC social media corpus containing ~14k short texts with slang, elongated words, and explicit sarcasm (`Positive`, `Negative`, `Neutral`, `Sarcastic`).
+   - **Resource**: Kaggle (`Social Media Slang & Emoji Sentiment`).
+
 The source code is licensed under the MIT License (`LICENSE`).

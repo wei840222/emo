@@ -152,3 +152,17 @@ When running `emo --json`, the resulting JSON object contains the following key 
 | **`volatility_std_dev`** | `< 0.2` | **Monotone / Consistent** (Emotional tone remains steady throughout) |
 | | `≥ 0.4` | **High Volatility / Emotional Swing** 🌊 (Large sentiment shifts between sentences/sections) |
 | **`style_level`** | Categorical | `Text Only`, `Formal / Minimal`, `Casual`, `Expressive`, or `Heavy Emoji / Social` based on emoji density per 100 words. |
+
+---
+
+## Dataset References & Community Standards
+
+While `emo` relies on **Emoji Sentiment Ranking 1.0** for compiled zero-dependency runtime evaluation, the following datasets are standard references in the NLP research community:
+
+- **Emoji Sentiment Ranking 1.0** *(Built-in)*: 751 annotated emojis with polarity scores (`-1.0` to `+1.0`). (Novak et al., 2015)
+- **TweetEval / SemEval-2018 Task 2**: Contextual emoji prediction benchmark across 20 classes. (Barbieri et al., 2018)
+- **DeepMoji**: 1.2B Twitter corpus across 64 emoji labels for transfer learning and sarcasm detection. (Felbo et al., EMNLP 2017)
+- **EmojiNet**: Multi-sense emoji knowledge base linking 2,300+ emojis to BabelNet synsets. (Knoesis Institute)
+- **Google GoEmotions**: 58k Reddit comments across 27 fine-grained emotions mapped 1-to-1 to emojis. (Google Research, 2020)
+- **Social Media Slang & Emoji Corpus**: ~14k UGC texts with slang, elongated words, and explicit sarcasm labels. (Kaggle)
+

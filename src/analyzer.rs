@@ -79,6 +79,19 @@ pub struct FileReport {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct EmotionStat {
+    pub emotion: String,
+    pub count: usize,
+    pub percentage: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EmotionProfile {
+    pub primary_emotion: String,
+    pub top_emotions: Vec<EmotionStat>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct AnalysisResult {
     pub total_chars: usize,
     pub total_words: usize,
@@ -103,6 +116,7 @@ pub struct AnalysisResult {
     pub ambiguity_index: f64,
     pub ambiguity_status: String,
     pub position_bias: PositionBias,
+    pub emotion_profile: Option<EmotionProfile>,
     pub block_stats: Vec<UnicodeBlockStat>,
     pub progression: SentimentProgression,
     pub bursts: Vec<EmojiBurst>,
@@ -171,6 +185,7 @@ impl<'a> Analyzer<'a> {
         let mut negative_count = 0usize;
 
         let mut block_counts: HashMap<String, (usize, f64)> = HashMap::new();
+        let mut emotion_counts: HashMap<String, usize> = HashMap::new();
 
         for (emoji_str, count) in &counts {
             total_emojis += count;
@@ -194,6 +209,8 @@ impl<'a> Analyzer<'a> {
                 entry.0 += count;
                 entry.1 += score * (*count as f64);
 
+                *emotion_counts.entry(info.primary_emotion.clone()).or_insert(0) += count;
+
                 all_stats.push(EmojiStat {
                     emoji: emoji_str.clone(),
                     name: info.name.clone(),
@@ -206,6 +223,8 @@ impl<'a> Analyzer<'a> {
                 unmatched_emojis_count += count;
                 let entry = block_counts.entry("Unknown Category".to_string()).or_insert((0, 0.0));
                 entry.0 += count;
+
+                *emotion_counts.entry("Unknown".to_string()).or_insert(0) += count;
 
                 all_stats.push(EmojiStat {
                     emoji: emoji_str.clone(),
@@ -498,6 +517,31 @@ impl<'a> Analyzer<'a> {
         });
         top_negative.truncate(top_n);
 
+        // GoEmotions Profile
+        let mut emotion_stats = Vec::new();
+        for (emotion, cnt) in emotion_counts {
+            let percentage = if total_emojis > 0 {
+                (cnt as f64 / total_emojis as f64) * 100.0
+            } else {
+                0.0
+            };
+            emotion_stats.push(EmotionStat {
+                emotion,
+                count: cnt,
+                percentage,
+            });
+        }
+        emotion_stats.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.emotion.cmp(&b.emotion)));
+
+        let emotion_profile = if !emotion_stats.is_empty() {
+            Some(EmotionProfile {
+                primary_emotion: emotion_stats[0].emotion.clone(),
+                top_emotions: emotion_stats,
+            })
+        } else {
+            None
+        };
+
         AnalysisResult {
             total_chars,
             total_words,
@@ -522,6 +566,7 @@ impl<'a> Analyzer<'a> {
             ambiguity_index,
             ambiguity_status,
             position_bias,
+            emotion_profile,
             block_stats,
             progression,
             bursts,
@@ -767,5 +812,22 @@ mod tests {
 
         assert!(result.total_words > 1);
         assert_eq!(result.total_emojis, 2);
+    }
+
+    #[test]
+    fn test_emojinet_and_goemotions() {
+        let dataset = EmojiDataset::load_embedded().unwrap();
+        let analyzer = Analyzer::new(&dataset);
+
+        let text = "Party time! 🥳 Modern emoji 🥺🤯🫠🥰!";
+        let result = analyzer.analyze(text, 10);
+
+        assert_eq!(result.total_emojis, 5);
+        assert_eq!(result.matched_emojis_count, 5);
+        assert_eq!(result.unmatched_emojis_count, 0);
+
+        assert!(result.emotion_profile.is_some());
+        let profile = result.emotion_profile.unwrap();
+        assert!(!profile.top_emotions.is_empty());
     }
 }
