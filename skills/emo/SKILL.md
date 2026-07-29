@@ -103,6 +103,23 @@ When running `emo --json`, the resulting JSON object contains the following key 
     "end_pct": 20.0,
     "bias_status": "Balanced Placement"
   },
+  "slang_analysis": {
+    "total_slang_count": 3,
+    "slang_density_per_100_words": 20.0,
+    "sarcasm_index": 85.0,
+    "sarcasm_status": "High Sarcasm / Irony Alert 🎭",
+    "elongation_count": 1,
+    "hybrid_score": 0.525,
+    "top_slang": [
+      {
+        "term": "笑死",
+        "count": 1,
+        "sentiment_score": 0.8,
+        "sarcasm_weight": 0.2,
+        "meaning": "extremely funny"
+      }
+    ]
+  },
   "block_stats": [
     {
       "block_name": "Emoticons",

@@ -205,8 +205,8 @@ While `emo` relies on **Emoji Sentiment Ranking 1.0** for compiled zero-dependen
    - **Focus**: 58k Reddit comments labeled across 27 fine-grained emotions plus Neutral, commonly mapped 1-to-1 to emoji representations.
    - **Resource**: Available on Hugging Face (`google/go_emotions`).
 
-6. **Social Media Slang & Emoji Sentiment Corpus**
-   - **Focus**: UGC social media corpus containing ~14k short texts with slang, elongated words, and explicit sarcasm (`Positive`, `Negative`, `Neutral`, `Sarcastic`).
-   - **Resource**: Kaggle (`Social Media Slang & Emoji Sentiment`).
+6. **Social Media Slang & Emoji Sentiment Corpus** *(Built-in Multilingual Slang Dataset)*
+   - **Focus**: UGC social media corpus containing slang, acronyms, CJK internet vocabulary (Traditional/Simplified Chinese, Japanese, Korean), elongated words, and explicit sarcasm (`Positive`, `Negative`, `Neutral`, `Sarcastic`).
+   - **Resource**: Kaggle (`Social Media Slang & Emoji Sentiment`) & `assets/Multilingual_Slang_v1.0.csv`.
 
 The source code is licensed under the MIT License (`LICENSE`).

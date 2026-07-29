@@ -209,6 +209,47 @@ fn render_table(result: &AnalysisResult) {
     // Distribution Bar
     render_distribution_bar(result);
 
+    // Multilingual Slang & Sarcasm Analysis
+    if let Some(slang) = &result.slang_analysis {
+        println!("\n{}", "💬 Multilingual Slang & Sarcasm Analysis".bold().underline());
+        println!(
+            " 🎭 Sarcasm Index        : {:.1}% ({})",
+            slang.sarcasm_index,
+            slang.sarcasm_status.magenta()
+        );
+        println!(
+            " 📱 Slang Density         : {:.2} per 100 words (Total: {})",
+            slang.slang_density_per_100_words, slang.total_slang_count
+        );
+        println!(
+            " 💥 Text Stretch Factor   : {} elongated words",
+            slang.elongation_count.to_string().yellow()
+        );
+        println!(
+            " 🧠 Hybrid Sentiment     : {:.3} (Emoji + Slang)",
+            slang.hybrid_score
+        );
+
+        if !slang.top_slang.is_empty() {
+            let mut slang_table = Table::new();
+            slang_table
+                .load_preset(UTF8_FULL)
+                .set_content_arrangement(ContentArrangement::Dynamic)
+                .set_header(vec!["Slang Term", "Count", "Score [-1.0~+1.0]", "Sarcasm Weight", "Meaning"]);
+
+            for s in slang.top_slang.iter().take(5) {
+                slang_table.add_row(vec![
+                    Cell::new(&s.term),
+                    Cell::new(s.count),
+                    Cell::new(format!("{:.2}", s.sentiment_score)),
+                    Cell::new(format!("{:.2}", s.sarcasm_weight)),
+                    Cell::new(&s.meaning),
+                ]);
+            }
+            println!("{}", slang_table);
+        }
+    }
+
     // GoEmotions Fine-Grained Emotion Spectrum
     if let Some(profile) = &result.emotion_profile {
         if !profile.top_emotions.is_empty() {

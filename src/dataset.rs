@@ -6,6 +6,7 @@ use std::collections::HashMap;
 const EMBEDDED_DATASET: &str = include_str!("../assets/Emoji_Sentiment_Data_v1.0.csv");
 const EMBEDDED_EXTENDED_DATASET: &str = include_str!("../assets/EmojiNet_v1.0.csv");
 const EMBEDDED_GOEMOTIONS_DATASET: &str = include_str!("../assets/GoEmotions_27_Mapping.csv");
+const EMBEDDED_SLANG_DATASET: &str = include_str!("../assets/Multilingual_Slang_v1.0.csv");
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmojiData {
@@ -53,11 +54,22 @@ pub struct GoEmotionCategory {
     pub description: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SlangData {
+    pub term: String,
+    pub language: String,
+    pub sentiment_score: f64,
+    pub sarcasm_weight: f64,
+    pub category: String,
+    pub meaning: String,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct EmojiDataset {
     by_char: HashMap<String, EmojiData>,
     by_codepoint: HashMap<String, EmojiData>,
     goemotions_categories: HashMap<String, GoEmotionCategory>,
+    slang_terms: HashMap<String, SlangData>,
 }
 
 impl EmojiDataset {
@@ -65,6 +77,7 @@ impl EmojiDataset {
         let mut by_char = HashMap::new();
         let mut by_codepoint = HashMap::new();
         let mut goemotions_categories = HashMap::new();
+        let mut slang_terms = HashMap::new();
 
         // 1. Load Primary Emoji Sentiment Ranking v1.0
         let mut rdr1 = ReaderBuilder::new()
@@ -161,10 +174,37 @@ impl EmojiDataset {
             goemotions_categories.insert(category.to_lowercase(), go_cat);
         }
 
+        // 4. Load Multilingual Slang & Sarcasm Dataset (Multilingual_Slang_v1.0.csv)
+        let mut rdr4 = ReaderBuilder::new()
+            .has_headers(true)
+            .from_reader(EMBEDDED_SLANG_DATASET.as_bytes());
+
+        for result in rdr4.records() {
+            let record = result.context("Failed to parse Multilingual_Slang CSV record")?;
+            let term = record.get(0).unwrap_or("").trim().to_string();
+            let language = record.get(1).unwrap_or("en").trim().to_string();
+            let sentiment_score = record.get(2).unwrap_or("0.0").parse::<f64>().unwrap_or(0.0);
+            let sarcasm_weight = record.get(3).unwrap_or("0.0").parse::<f64>().unwrap_or(0.0);
+            let category = record.get(4).unwrap_or("Social").trim().to_string();
+            let meaning = record.get(5).unwrap_or("").trim().to_string();
+
+            let slang_data = SlangData {
+                term: term.clone(),
+                language,
+                sentiment_score,
+                sarcasm_weight,
+                category,
+                meaning,
+            };
+
+            slang_terms.insert(term.to_lowercase(), slang_data);
+        }
+
         Ok(Self {
             by_char,
             by_codepoint,
             goemotions_categories,
+            slang_terms,
         })
     }
 
@@ -181,6 +221,14 @@ impl EmojiDataset {
 
     pub fn get_goemotion_category(&self, category: &str) -> Option<&GoEmotionCategory> {
         self.goemotions_categories.get(&category.to_lowercase())
+    }
+
+    pub fn get_slang(&self, term: &str) -> Option<&SlangData> {
+        self.slang_terms.get(&term.to_lowercase())
+    }
+
+    pub fn all_slang_terms(&self) -> &HashMap<String, SlangData> {
+        &self.slang_terms
     }
 
     pub fn len(&self) -> usize {
@@ -241,5 +289,10 @@ mod tests {
         let adm = dataset.get_goemotion_category("Admiration").unwrap();
         assert_eq!(adm.polarity, "Positive");
         assert!(adm.mapped_emojis.contains(&"👑".to_string()));
+
+        let lol = dataset.get_slang("lol").unwrap();
+        assert_eq!(lol.language, "en");
+        let xiaosi = dataset.get_slang("笑死").unwrap();
+        assert_eq!(xiaosi.language, "zh-TW");
     }
 }

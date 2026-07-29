@@ -7,5 +7,5 @@ pub use analyzer::{
     FileReport, MultiFileAnalysisResult, PositionBias, SentimentProgression, SentimentSegment,
     SplitMode, UnicodeBlockStat,
 };
-pub use dataset::{EmojiData, EmojiDataset, GoEmotionCategory};
+pub use dataset::{EmojiData, EmojiDataset, GoEmotionCategory, SlangData};
 pub use formatter::{render_multi_output, render_output, OutputFormat};

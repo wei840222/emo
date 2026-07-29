@@ -1,0 +1,225 @@
+term,language,sentiment_score,sarcasm_weight,category,meaning
+lol,en,0.6,0.2,Amusement,laugh out loud
+lmao,en,0.8,0.2,Amusement,laughing my ass off
+lmfao,en,0.9,0.2,Amusement,laughing my fucking ass off
+rofl,en,0.8,0.1,Amusement,rolling on the floor laughing
+roflmao,en,0.9,0.1,Amusement,rolling on the floor laughing my ass off
+tbh,en,0.1,0.0,Opinion,to be honest
+smh,en,-0.6,0.3,Disapproval,shaking my head
+smho,en,-0.7,0.3,Disapproval,shaking my head off
+fr,en,0.4,0.0,Emphasis,for real
+frfr,en,0.5,0.0,Emphasis,for real for real
+ong,en,0.5,0.0,Emphasis,on god
+ngl,en,0.1,0.0,Opinion,not gonna lie
+btw,en,0.0,0.0,Neutral,by the way
+omg,en,0.5,0.2,Surprise,oh my god
+omfg,en,0.6,0.3,Surprise,oh my fucking god
+idk,en,0.0,0.0,Neutral,i dont know
+idek,en,-0.1,0.0,Neutral,i dont even know
+idgaf,en,-0.7,0.4,Disapproval,i dont give a fuck
+idgc,en,-0.5,0.3,Disapproval,i dont give a crap
+imho,en,0.1,0.0,Opinion,in my humble opinion
+imo,en,0.1,0.0,Opinion,in my opinion
+tbf,en,0.2,0.0,Opinion,to be fair
+fyp,en,0.2,0.0,Social,for you page
+gg,en,0.7,0.1,Gaming,good game
+ggwp,en,0.8,0.0,Gaming,good game well played
+ez,en,0.5,0.5,Gaming,easy win / taunt
+pog,en,0.9,0.0,Gaming,play of the game / epic moment
+poggers,en,0.9,0.0,Gaming,epic excitement
+copium,en,-0.4,0.6,Sarcasm,delusional hope / coping
+hopium,en,0.2,0.5,Sarcasm,false hope / optimistic delusion
+ratio,en,-0.7,0.7,Social,getting more replies than likes / fail
+ratioed,en,-0.8,0.7,Social,publicly humiliated in replies
+afaik,en,0.0,0.0,Neutral,as far as i know
+nvm,en,-0.1,0.1,Neutral,never mind
+ofc,en,0.3,0.1,Agreement,of course
+brb,en,0.0,0.0,Neutral,be right back
+bbl,en,0.0,0.0,Neutral,be back later
+afk,en,-0.1,0.0,Gaming,away from keyboard
+pls,en,0.2,0.0,Request,please
+plz,en,0.2,0.0,Request,please
+thx,en,0.8,0.0,Gratitude,thanks
+ty,en,0.8,0.0,Gratitude,thank you
+wtf,en,-0.7,0.5,Surprise,what the fuck
+wth,en,-0.5,0.4,Surprise,what the hell
+stfu,en,-0.8,0.5,Disapproval,shut the fuck up
+gtfo,en,-0.8,0.5,Disapproval,get the fuck out
+tldr,en,0.0,0.0,Neutral,too long didnt read
+nsfw,en,-0.3,0.0,Warning,not safe for work
+sfw,en,0.2,0.0,Safety,safe for work
+tmi,en,-0.3,0.2,Surprise,too much information
+pov,en,0.2,0.0,Social,point of view
+npc,en,-0.6,0.5,Sarcasm,non-playable character / mindless follower
+main character,en,0.5,0.3,Social,center of attention / protagonist vibe
+rizz,en,0.9,0.1,Charm,charisma / ability to charm others
+gyatt,en,0.7,0.2,Surprise,exclamation of admiration / shock
+skibidi,en,0.2,0.4,Meme,viral Gen-Z brainrot term
+chad,en,0.8,0.2,Admiration,alpha male / heroic figure
+gigachad,en,0.9,0.2,Admiration,ultimate masculine icon
+beta,en,-0.6,0.4,Disapproval,weak or submissive person
+alpha,en,0.6,0.3,Pride,dominant person
+simp,en,-0.5,0.4,Disapproval,overly attentive to someone
+stan,en,0.7,0.1,Affection,obsessive fan
+ship,en,0.6,0.0,Affection,support a romantic pairing
+salty,en,-0.5,0.3,Annoyance,bitter or upset about losing
+ghosted,en,-0.7,0.2,Sadness,abruptly cut off communication
+bussin,en,0.9,0.0,Approval,delicious or extremely good
+mid,en,-0.4,0.3,Disapproval,mediocre / average
+valid,en,0.8,0.0,Approval,understandable or legitimate
+based,en,0.9,0.1,Approval,courageously true to oneself
+cap,en,-0.6,0.4,Disapproval,lie / false claim
+no cap,en,0.6,0.0,Emphasis,no lie / genuine truth
+period,en,0.6,0.1,Emphasis,end of discussion / statement made
+periodt,en,0.7,0.1,Emphasis,emphatic end of discussion
+slay,en,0.9,0.0,Admiration,doing something exceptionally well
+ate,en,0.9,0.0,Admiration,executed perfectly
+left no crumbs,en,0.9,0.0,Admiration,performed flawlessly
+fire,en,0.9,0.0,Approval,amazing or awesome
+lit,en,0.9,0.0,Excitement,exciting and fun
+banger,en,0.9,0.0,Approval,great song or creation
+goat,en,0.9,0.0,Admiration,greatest of all time
+sus,en,-0.5,0.4,Suspicion,suspicious or shady
+cringe,en,-0.8,0.4,Disapproval,embarrassing or awkward
+flex,en,0.4,0.2,Pride,showing off achievements or wealth
+rip,en,-0.5,0.3,Sadness,rest in peace / fail
+fml,en,-0.8,0.4,Sadness,fuck my life
+yeet,en,0.6,0.1,Excitement,throw forcefully or express excitement
+dank,en,0.8,0.1,Approval,high quality meme or item
+vibe,en,0.7,0.0,Mood,atmosphere or feeling
+vibing,en,0.8,0.0,Mood,chilling and enjoying the atmosphere
+savage,en,0.7,0.2,Admiration,ruthless or boldly impressive
+clout,en,0.4,0.3,Social,"fame, influence, or status"
+ghost,en,-0.5,0.2,Sadness,disappear or ignore someone
+canceled,en,-0.8,0.5,Disapproval,shamed and rejected by public
+spill the tea,en,0.6,0.1,Social,share gossip
+throw shade,en,-0.5,0.5,Disapproval,subtly insult someone
+lowkey,en,0.2,0.0,Emphasis,secretly or subtly
+highkey,en,0.6,0.0,Emphasis,openly or intensely
+deadass,en,0.5,0.0,Emphasis,completely serious
+bet,en,0.7,0.0,Agreement,agreed / count me in
+facts,en,0.8,0.0,Agreement,absolute truth
+sheesh,en,0.7,0.2,Surprise,expression of amazement or disbelief
+bruh,en,-0.2,0.3,Surprise,disbelief or disappointment bro
+dude,en,0.1,0.0,Address,casual friend
+fam,en,0.7,0.0,Affection,close friends or family
+bro,en,0.3,0.0,Address,brother / friend
+sis,en,0.4,0.0,Address,sister / friend
+bestie,en,0.8,0.0,Affection,best friend
+living rent free,en,0.3,0.4,Obsession,constantly in ones mind
+touch grass,en,-0.6,0.6,Sarcasm,go outside and get real world perspective
+skill issue,en,-0.6,0.7,Sarcasm,lack of talent or ability
+git gud,en,-0.5,0.6,Sarcasm,improve your skills / gaming taunt
+cope,en,-0.6,0.7,Sarcasm,struggling to accept reality
+seethe,en,-0.7,0.7,Sarcasm,boiling with hidden rage
+yeah right,en,-0.6,0.9,Sarcasm,expressing disbelief or sarcasm
+sure buddy,en,-0.5,0.9,Sarcasm,patronizing sarcasm
+great job lol,en,-0.4,0.8,Sarcasm,sarcastic praise
+clown move,en,-0.7,0.8,Sarcasm,foolish action
+笑死,zh-TW,0.8,0.2,Amusement,extremely funny / dying of laughter
+笑翻,zh-TW,0.8,0.1,Amusement,burst out laughing
+破防,zh-TW,-0.7,0.1,Sadness,emotionally overwhelmed / defense broken
+哭啊,zh-TW,-0.6,0.2,Sadness,frustrated outcry
+傻眼,zh-TW,-0.5,0.3,Surprise,dumbfounded / speechless
+翻白眼,zh-TW,-0.6,0.4,Annoyance,rolling eyes
+無語,zh-TW,-0.5,0.4,Annoyance,speechless
+讚啦,zh-TW,0.9,0.0,Approval,awesome / super good
+神作,zh-TW,0.9,0.0,Admiration,masterpiece
+爽啦,zh-TW,0.9,0.0,Joy,feels great
+推爆,zh-TW,0.9,0.0,Approval,highly recommend / upvote to max
+卡位,zh-TW,0.1,0.0,Social,camping for updates / staying tuned
+太狂,zh-TW,0.8,0.1,Admiration,too wild / incredibly crazy awesome
+超派,zh-TW,0.7,0.2,Emphasis,super intense / aggressive style
+穩了,zh-TW,0.8,0.0,Approval,guaranteed success / locked in
+舒服,zh-TW,0.8,0.0,Joy,comfortable / satisfying
+好耶,zh-TW,0.8,0.0,Joy,yay / great
+大心,zh-TW,0.8,0.0,Affection,big heart / love it
+真香,zh-TW,0.7,0.3,Humor,contradicting ones past refusal and loving it
+大推,zh-TW,0.9,0.0,Approval,strongly recommend
+寄了,zh-TW,-0.7,0.2,Disappointment,finished / failed / doomed
+三小,zh-TW,-0.6,0.3,Surprise,what the heck
+爛透,zh-TW,-0.8,0.1,Disapproval,terrible / total trash
+悲劇,zh-TW,-0.7,0.1,Sadness,tragedy / total failure
+退追,zh-TW,-0.6,0.2,Disapproval,unfollow / unsubscribed
+心碎,zh-TW,-0.8,0.1,Sadness,heartbroken
+心累,zh-TW,-0.6,0.2,Sadness,emotionally exhausted
+絕望,zh-TW,-0.8,0.1,Sadness,despair
+踩雷,zh-TW,-0.7,0.1,Disappointment,got scammed / bad experience
+崩潰,zh-TW,-0.8,0.1,Sadness,mental breakdown
+完蛋,zh-TW,-0.7,0.1,Fear,doomed / finished
+假正經,zh-TW,-0.5,0.8,Sarcasm,hypocritical
+好喔,zh-TW,-0.2,0.7,Sarcasm,sarcastic okay
+真棒,zh-TW,0.3,0.7,Sarcasm,sarcastic great
+加油捏,zh-TW,-0.1,0.8,Sarcasm,sarcastic encouragement
+酸民,zh-TW,-0.6,0.6,Sarcasm,hater / keyboard warrior
+水喔,zh-TW,0.8,0.1,Approval,beautiful move
+洗洗睡,zh-TW,-0.5,0.7,Sarcasm,give up and go to sleep
+下去,zh-TW,-0.6,0.7,Sarcasm,get out of here / failed
+牛逼,zh-CN,0.9,0.0,Admiration,awesome / godlike
+nb,zh-CN,0.9,0.0,Admiration,awesome
+666,zh-CN,0.8,0.0,Approval,smooth / skillful
+233,zh-CN,0.7,0.1,Amusement,laughing
+23333,zh-CN,0.8,0.1,Amusement,laughing heavily
+555,zh-CN,-0.6,0.1,Sadness,crying
+yyds,zh-CN,0.9,0.0,Admiration,eternal god / the best
+xswl,zh-CN,0.8,0.2,Amusement,laughing to death
+dddd,zh-CN,0.1,0.3,Neutral,those who understand understand
+u1s1,zh-CN,0.1,0.0,Opinion,to be honest
+bdjw,zh-CN,0.0,0.0,Question,asking respectfully
+awsl,zh-CN,0.9,0.1,Affection,so cute im dying
+绝了,zh-CN,0.8,0.1,Admiration,amazing / unmatchable
+太强了,zh-CN,0.9,0.0,Admiration,so powerful
+绝绝子,zh-CN,0.8,0.2,Admiration,awesome / super good
+太香了,zh-CN,0.9,0.0,Joy,so good / loving it
+冲冲冲,zh-CN,0.8,0.0,Excitement,lets go / charge
+给力,zh-CN,0.8,0.0,Approval,awesome / helpful
+神仙,zh-CN,0.9,0.0,Admiration,godtier / divine talent
+麻了,zh-CN,-0.6,0.2,Annoyance,numbed / exhausted
+破防了,zh-CN,-0.7,0.1,Sadness,heartbroken / emotional breakdown
+泪目,zh-CN,-0.5,0.0,Sadness,tears in eyes / moved to tears
+酸了,zh-CN,-0.4,0.3,Envy,jealous
+崩了,zh-CN,-0.7,0.1,Sadness,collapsed / broken down
+芭比Q了,zh-CN,-0.7,0.3,Disappointment,barbecued / finished / ruined
+凉凉,zh-CN,-0.7,0.2,Disappointment,finished / dead
+扎心,zh-CN,-0.6,0.1,Sadness,heart-piercing / painful truth
+草,ja,0.6,0.2,Amusement,laughing (grass)
+www,ja,0.6,0.1,Amusement,laughing (warai)
+笑,ja,0.5,0.0,Amusement,laugh
+乙,ja,0.4,0.0,Gratitude,thanks for hard work
+神,ja,0.9,0.0,Admiration,godtier / masterpiece
+神回,ja,0.9,0.0,Admiration,godtier episode
+てぇてぇ,ja,0.9,0.1,Affection,precious / wholesome relationship
+尊い,ja,0.9,0.0,Affection,precious / divine
+最高,ja,0.9,0.0,Approval,the best
+ワロタ,ja,0.7,0.1,Amusement,lol / laughed
+わろた,ja,0.7,0.1,Amusement,lol / laughed
+エモい,ja,0.8,0.0,Emotion,emotional / nostalgic vibe
+推し,ja,0.8,0.0,Affection,favorite character / idol
+泣いた,ja,-0.5,0.1,Sadness,cried / sad
+悲報,ja,-0.6,0.2,Sadness,sad news / bad news
+オワタ,ja,-0.7,0.3,Disappointment,finished / doomed
+詰んだ,ja,-0.7,0.2,Disappointment,checkmated / stuck
+ぴえん,ja,-0.5,0.2,Sadness,pouting / crying cute emoji vibe
+無理,ja,-0.6,0.2,Disapproval,impossible / cannot handle
+萎え,ja,-0.5,0.2,Disappointment,turn off / discouraged
+鬱,ja,-0.8,0.1,Sadness,depressed
+ㅋㅋㅋ,ko,0.7,0.1,Amusement,laughing (kkk)
+ㅋㅋㅋㅋ,ko,0.8,0.1,Amusement,laughing hard
+ㅠㅠ,ko,-0.6,0.1,Sadness,crying (tftf)
+ㅠㅠㅠㅠ,ko,-0.7,0.1,Sadness,crying heavily
+ㅎㅎ,ko,0.5,0.0,Amusement,hehe
+대박,ko,0.9,0.0,Surprise,awesome / jackpot
+꿀잼,ko,0.9,0.0,Amusement,super fun / hilarious
+개이득,ko,0.9,0.0,Approval,huge profit / total win
+대성공,ko,0.9,0.0,Approval,huge success
+갓,ko,0.9,0.0,Admiration,godtier
+짱,ko,0.8,0.0,Approval,best / top tier
+인정,ko,0.8,0.0,Agreement,agreed / recognized
+킹,ko,0.8,0.0,Admiration,king / awesome
+노잼,ko,-0.6,0.2,Disapproval,no fun / boring
+망했다,ko,-0.7,0.2,Disappointment,ruined / doomed
+멘붕,ko,-0.7,0.2,Sadness,mental breakdown
+현타,ko,-0.6,0.2,Mood,reality check / post-hype numbness
+빡침,ko,-0.7,0.2,Anger,extremely angry / pissed off
+억까,ko,-0.6,0.5,Sarcasm,unreasonable hate / forced criticism
+억빠,ko,0.5,0.5,Sarcasm,unreasonable praise / forced hyping

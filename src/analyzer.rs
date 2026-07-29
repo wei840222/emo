@@ -92,6 +92,26 @@ pub struct EmotionProfile {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct SlangStat {
+    pub term: String,
+    pub count: usize,
+    pub sentiment_score: f64,
+    pub sarcasm_weight: f64,
+    pub meaning: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SlangAnalysis {
+    pub total_slang_count: usize,
+    pub slang_density_per_100_words: f64,
+    pub sarcasm_index: f64,
+    pub sarcasm_status: String,
+    pub elongation_count: usize,
+    pub hybrid_score: f64,
+    pub top_slang: Vec<SlangStat>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct AnalysisResult {
     pub total_chars: usize,
     pub total_words: usize,
@@ -117,6 +137,7 @@ pub struct AnalysisResult {
     pub ambiguity_status: String,
     pub position_bias: PositionBias,
     pub emotion_profile: Option<EmotionProfile>,
+    pub slang_analysis: Option<SlangAnalysis>,
     pub block_stats: Vec<UnicodeBlockStat>,
     pub progression: SentimentProgression,
     pub bursts: Vec<EmojiBurst>,
@@ -515,8 +536,6 @@ impl<'a> Analyzer<'a> {
                 .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| b.count.cmp(&a.count))
         });
-        top_negative.truncate(top_n);
-
         // GoEmotions Profile
         let mut emotion_stats = Vec::new();
         for (emotion, cnt) in emotion_counts {
@@ -537,6 +556,92 @@ impl<'a> Analyzer<'a> {
             Some(EmotionProfile {
                 primary_emotion: emotion_stats[0].emotion.clone(),
                 top_emotions: emotion_stats,
+            })
+        } else {
+            None
+        };
+
+        // Multilingual Slang & Sarcasm Analysis
+        let mut slang_counts: HashMap<String, usize> = HashMap::new();
+        let mut elongation_count = 0usize;
+
+        for token in text.segment_str() {
+            let trimmed = token.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            if let Some(slang) = self.dataset.get_slang(trimmed) {
+                *slang_counts.entry(slang.term.clone()).or_insert(0) += 1;
+            }
+            if is_elongated(trimmed) {
+                elongation_count += 1;
+            }
+        }
+
+        let total_slang_count: usize = slang_counts.values().sum();
+        let mut slang_sarcasm_sum = 0.0f64;
+        let mut slang_score_sum = 0.0f64;
+        let mut top_slang = Vec::new();
+
+        for (term, cnt) in &slang_counts {
+            if let Some(slang) = self.dataset.get_slang(term) {
+                slang_sarcasm_sum += slang.sarcasm_weight * (*cnt as f64);
+                slang_score_sum += slang.sentiment_score * (*cnt as f64);
+                top_slang.push(SlangStat {
+                    term: slang.term.clone(),
+                    count: *cnt,
+                    sentiment_score: slang.sentiment_score,
+                    sarcasm_weight: slang.sarcasm_weight,
+                    meaning: slang.meaning.clone(),
+                });
+            }
+        }
+        top_slang.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.term.cmp(&b.term)));
+
+        let sarcastic_emoji_count = counts
+            .iter()
+            .filter(|(em, _)| matches!(em.as_str(), "🤡" | "🫠" | "🙃" | "💅" | "🙄"))
+            .map(|(_, c)| c)
+            .sum::<usize>();
+
+        let sarcasm_score_raw = if total_slang_count > 0 || sarcastic_emoji_count > 0 {
+            (slang_sarcasm_sum + (sarcastic_emoji_count as f64 * 0.8))
+                / ((total_slang_count + sarcastic_emoji_count) as f64)
+        } else {
+            0.0
+        };
+        let sarcasm_index = (sarcasm_score_raw * 100.0).min(100.0);
+
+        let sarcasm_status = if sarcasm_index >= 70.0 {
+            "High Sarcasm / Irony Alert 🎭".to_string()
+        } else if sarcasm_index >= 30.0 {
+            "Moderate Sarcasm / Playful Irony 😏".to_string()
+        } else {
+            "Direct & Literal Expression 🎯".to_string()
+        };
+
+        let slang_density_per_100_words = if total_words > 0 {
+            (total_slang_count as f64 / total_words as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let hybrid_score = if matched_emojis_count + total_slang_count > 0 {
+            (total_weighted_score + slang_score_sum)
+                / ((matched_emojis_count + total_slang_count) as f64)
+        } else {
+            overall_score
+        };
+
+        let slang_analysis = if total_slang_count > 0 || elongation_count > 0 || sarcasm_index > 10.0 {
+            Some(SlangAnalysis {
+                total_slang_count,
+                slang_density_per_100_words,
+                sarcasm_index,
+                sarcasm_status,
+                elongation_count,
+                hybrid_score,
+                top_slang,
             })
         } else {
             None
@@ -567,6 +672,7 @@ impl<'a> Analyzer<'a> {
             ambiguity_status,
             position_bias,
             emotion_profile,
+            slang_analysis,
             block_stats,
             progression,
             bursts,
@@ -753,6 +859,25 @@ fn is_likely_emoji(grapheme: &str) -> bool {
     }
 }
 
+fn is_elongated(token: &str) -> bool {
+    let chars: Vec<char> = token.chars().collect();
+    if chars.len() < 3 {
+        return false;
+    }
+    let mut repeat_count = 1usize;
+    for i in 1..chars.len() {
+        if chars[i] == chars[i - 1] {
+            repeat_count += 1;
+            if repeat_count >= 3 {
+                return true;
+            }
+        } else {
+            repeat_count = 1;
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -829,5 +954,20 @@ mod tests {
         assert!(result.emotion_profile.is_some());
         let profile = result.emotion_profile.unwrap();
         assert!(!profile.top_emotions.is_empty());
+    }
+
+    #[test]
+    fn test_multilingual_slang_and_sarcasm() {
+        let dataset = EmojiDataset::load_embedded().unwrap();
+        let analyzer = Analyzer::new(&dataset);
+
+        let text = "tbh this is sooooo fire 🔥 笑死 破防 🤡 666 fr fr";
+        let result = analyzer.analyze(text, 10);
+
+        assert!(result.slang_analysis.is_some());
+        let slang = result.slang_analysis.unwrap();
+        assert!(slang.total_slang_count >= 3);
+        assert!(slang.elongation_count >= 1);
+        assert!(slang.sarcasm_index > 0.0);
     }
 }
