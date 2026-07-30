@@ -12,13 +12,13 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 - 📊 **Comprehensive Sentiment & Intensity Metrics**: Calculates weighted sentiment scores (`-1.0` to `+1.0`), emotional intensity (`0.0` to `1.0`), usage density, Shannon entropy, and positive/neutral/negative breakdowns.
 - ⚖️ **Polarization Index & Emotional Shift**: Detects emotional conflicts (contrasting positive and negative emojis) and tracks emotional progression across text timeline, paragraphs, or lines.
 - 🔥 **Bursts & Combos Detection**: Identifies repeated emoji bursts (streaks like `🔥🔥🔥`) and frequent adjacent pairs (combos like `🔥🚀`).
-- 🎨 **Beautiful Terminal Output**: Displays colorful progress, style ratings, and formatted tables in terminal mode.
+- 🎨 **Beautiful Terminal Output**: Displays colorful progress, style ratings, and clean borderless list/card views (immune to terminal emoji width grid misalignment).
 - 🤖 **Pipeline & JSON Ready**: Supports `--json` / `-j` and `--summary` / `-s` for script automation and CI/CD integration.
-- 📥 **Flexible Inputs**: Supports reading from multiple files, directories, or stdin piping (`cat file.txt | emo`).
+- 📥 **Flexible Inputs & Relative Paths**: Supports reading from multiple files, directories (displaying paths relative to the input folder), or stdin piping (`cat file.txt | emo`).
 
 ## Metrics & Output Definitions
 
-| **Multi-File Benchmark** | Aggregated per file | When passing multiple files, benchmarks each file side-by-side (`File Name`, `Emojis`, `Score`, `Intensity`, `Top Emoji`) in a comparative table. |
+| **Multi-File Benchmark** | Aggregated per file | When passing multiple files or directories, benchmarks each file side-by-side (`File Name`, `Emojis`, `Score`, `Intensity`, `Top Emoji`) using relative path display. |
 | **Placement Bias** | Relative position ($0.0$ to $1.0$) | Evaluates whether emojis are `Front-loaded` ($0-33\%$), `Balanced Placement`, or `Trailing / End-loaded` ($66-100\%$). |
 | **Sentiment Volatility (\(\sigma\))** | Standard Deviation of scores | Measures emotional stability vs mood swings (`Monotone / Consistent` $\sigma < 0.2$ vs `High Volatility` $\sigma \ge 0.4$). |
 | **Ambiguity Index (%)** | Neutral emoji ratio | Measures neutral/reserved expression (`Subtle / Ambiguous 💭` $> 50\%$ vs `Direct & Explicit 🎯` $< 20\%$). |
@@ -60,7 +60,7 @@ echo "Great news today! 🎉😍 Rocket launch 🚀! But oh no, servers crashed 
 # Single file
 emo document.txt
 
-# Multiple files or entire folder
+# Multiple files or entire folder (paths shown relative to input path)
 emo README.md AGENTS.md
 emo path/to/logs_folder/
 ```
@@ -100,60 +100,45 @@ Options:
  🔤 Total Words Scanned   : 15
  😊 Emojis Found         : 5 (5 Unique)
  🎯 Matched in Dataset    : 5 (Unmatched: 0)
- 📈 Overall Score        : 0.345 (Positive 😊)
- ⚡ Sentiment Intensity  : 0.742
- ⚖️  Polarization Index   : 0.960 (Highly Polarized 🔥❄️)
+ 📈 Overall Score        : 0.345 (Positive 😊) [-1.0 ~ +1.0]
+ ⚡ Sentiment Intensity  : 0.742 [0.0 ~ 1.0]
+ 🌊 Sentiment Volatility  : σ = 0.409 (High Volatility 🌊) [≥ 0.0]
+ ⚖️  Polarization Index   : 0.960 (Highly Polarized 🔥❄️) [0.0 ~ 1.0]
+ 💭 Ambiguity & Neutral   : 0.0% Neutral (Direct & Explicit 🎯) [0.0% ~ 100.0%]
 
-📐 Expression Metrics & Style
+📐 Expression Metrics & Placement
  🏷️  Text Style Level     : Heavy Emoji / Social
  📏 Emoji Density        : 59.52 per 1,000 chars / 33.33 per 100 words
  🌀 Diversity & Entropy   : 2.322 bits (Unique ratio: 100.0%)
+ 📍 Placement Bias        : Avg Pos: 0.53 (Trailing / End-loaded Preferred)
+    └─ Distribution       : Front: 0.0% | Mid: 50.0% | End: 50.0%
 
  Breakdown Distribution
  [██████████████████████████████]
  Positive: 3 (60.0%) | Neutral: 0 (0.0%) | Negative: 2 (40.0%)
 
 📂 Top Unicode Emoji Categories
-┌───────────────────────────┬───────┬────────────┬───────────┐
-│ Category / Block          ┆ Count ┆ Percentage ┆ Avg Score │
-╞═══════════════════════════╪═══════╪════════════╪═══════════╡
-│ Miscellaneous Symbols and ┆ 2     ┆ 40.0%      ┆ 0.309     │
-│ Pictographs               ┆       ┆            ┆           │
-│ Emoticons                 ┆ 2     ┆ 40.0%      ┆ 0.292     │
-│ Transport and Map Symbols ┆ 1     ┆ 20.0%      ┆ 0.525     │
-└───────────────────────────┴───────┴────────────┴───────────┘
+    • Miscellaneous Symbols and Pictographs — Count: 2    ( 40.0%) | Avg Score: +0.309
+    • Emoticons                — Count: 2    ( 40.0%) | Avg Score: +0.292
+    • Transport and Map Symbols — Count: 1    ( 20.0%) | Avg Score: +0.525
 
 📈 Sentiment Progression Arc
  Trend Status: Cooling Down 📉 (Positive → Negative)
-┌────────────────┬─────────────┬────────┬───────────┐
-│ Segment        ┆ Emoji Count ┆ Score  ┆ Intensity │
-╞════════════════╪═════════════╪════════╪═══════════╡
-│ Q1 (Beginning) ┆ 2           ┆ 0.709  ┆ 0.799     │
-│ Q2 (Early Mid) ┆ 2           ┆ 0.216  ┆ 0.702     │
-│ Q3 (Late Mid)  ┆ 1           ┆ -0.122 ┆ 0.707     │
-└────────────────┴─────────────┴────────┴───────────┘
+    • Q1 (Beginning)   — Emojis: 2   | Score: +0.709 | Intensity: 0.799
+    • Q2 (Early Mid)   — Emojis: 2   | Score: +0.216 | Intensity: 0.702
+    • Q3 (Late Mid)    — Emojis: 1   | Score: -0.122 | Intensity: 0.707
 
 📌 Most Used Emojis
-┌───────┬────────────────────┬───────┬────────┬───────────┐
-│ Emoji ┆ Unicode Name       ┆ Count ┆ Score  ┆ Sentiment │
-╞═══════╪════════════════════╪═══════╪════════╪═══════════╡
-│ 🎉    ┆ PARTY POPPER       ┆ 1     ┆ 0.740  ┆ Positive  │
-│ 💔    ┆ BROKEN HEART       ┆ 1     ┆ -0.122 ┆ Negative  │
-│ 😍    ┆ SMILING FACE WITH  ┆ 1     ┆ 0.678  ┆ Positive  │
-│       ┆ HEART-SHAPED EYES  ┆       ┆        ┆           │
-│ 😭    ┆ LOUDLY CRYING FACE ┆ 1     ┆ -0.093 ┆ Negative  │
-│ 🚀    ┆ ROCKET             ┆ 1     ┆ 0.525  ┆ Positive  │
-└───────┴────────────────────┴───────┴────────┴───────────┘
+   1. 🎉 (PARTY POPPER)       — Count: 1    | Score: +0.740 (Positive)
+   2. 💔 (BROKEN HEART)       — Count: 1    | Score: -0.122 (Negative)
+   3. 😍 (SMILING FACE WITH HEART-SHAPED EYES) — Count: 1    | Score: +0.678 (Positive)
+   4. 😭 (LOUDLY CRYING FACE) — Count: 1    | Score: -0.093 (Negative)
+   5. 🚀 (ROCKET)             — Count: 1    | Score: +0.525 (Positive)
 
 🔗 Frequent Emoji Combos
-┌────────────┬─────────────┐
-│ Combo Pair ┆ Occurrences │
-╞════════════╪═════════════╡
-│ 🎉😍       ┆ 1           │
-│ 😭💔       ┆ 1           │
-│ 😍🚀       ┆ 1           │
-│ 🚀😭       ┆ 1           │
-└────────────┴─────────────┘
+    • 🎉😍     — 1 occurrences
+    • 😭💔     — 1 occurrences
+    • 😍🚀     — 1 occurrences
 ```
 
 ## Development & Testing

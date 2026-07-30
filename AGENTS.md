@@ -4,11 +4,11 @@ This repository contains **`emo`**, a zero-dependency Rust CLI tool for analyzin
 
 ## Project Architecture & Layout
 
-- **`src/main.rs`**: CLI binary entry point. Parses CLI arguments using `clap`.
+- **`src/main.rs`**: CLI binary entry point. Parses CLI arguments using `clap` and handles directory traversal with relative path display.
 - **`src/lib.rs`**: Re-exports core library modules (`dataset`, `analyzer`, `formatter`).
 - **`src/dataset.rs`**: Loads and indexes the embedded CSV dataset (`include_str!`) into memory at compile time.
 - **`src/analyzer.rs`**: Scans input text using `unicode-segmentation` grapheme clusters, matches emojis against dataset, calculates weighted sentiment scores (`-1.0` to `+1.0`) and sentiment intensity.
-- **`src/formatter.rs`**: Formats output into colored terminal tables, JSON, or summary mode.
+- **`src/formatter.rs`**: Formats output into colored borderless terminal card/list views, JSON, or summary mode.
 - **`assets/Emoji_Sentiment_Data_v1.0.csv`**: Bundled Emoji Sentiment Ranking 1.0 research dataset. **Do not move or delete this file**.
 
 ## Development & Verification Commands
@@ -46,9 +46,11 @@ AI agents working on this codebase must verify changes using the following stand
 2. **Emoji & Unicode Handling**:
    - Always iterate over grapheme clusters (`UnicodeSegmentation::graphemes(text, true)`) rather than raw `char` or byte slices when parsing emojis.
 
-3. **Output Formats**:
+3. **Output Formats & Terminal Layout**:
+   - Terminal output uses a **borderless clean card/list layout** (without grid borders like `comfy_table`) to prevent emoji width alignment issues across terminal fonts.
+   - Directory scans output file paths relative to the input folder prefix.
    - Whenever adding or modifying sentiment metrics in `AnalysisResult` ([`src/analyzer.rs`](src/analyzer.rs)), update both:
-     - Terminal Table renderer ([`src/formatter.rs`](src/formatter.rs))
+     - Borderless terminal list renderer ([`src/formatter.rs`](src/formatter.rs))
      - JSON serialization output schema
 
 4. **Zero External Runtime Data Dependency**:
