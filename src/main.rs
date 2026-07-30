@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use emo::{render_multi_output, render_output, Analyzer, EmojiDataset, OutputFormat, SplitMode};
+use emoji_sentiment::{
+    render_multi_output, render_output, Analyzer, EmojiDataset, OutputFormat, SplitMode,
+};
 use std::fs;
 use std::io::{self, Read};
 use std::path::PathBuf;
