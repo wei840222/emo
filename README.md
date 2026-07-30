@@ -36,7 +36,13 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 
 ## Installation & Building
 
-Requires **Rust 1.80+**.
+### Install via crates.io:
+
+```bash
+cargo install emoji-sentiment
+```
+
+### Build from source:
 
 ```bash
 # Build release binary

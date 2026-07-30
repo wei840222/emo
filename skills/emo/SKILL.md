@@ -7,6 +7,12 @@ description: Analyze emoji usage, overall sentiment scores (-1.0 to +1.0), senti
 
 `emo` is a zero-dependency, high-performance Rust CLI tool that analyzes text and text files for emoji usage, weighted sentiment scores, non-neutral intensity, emotional polarization, and timeline progression based on the research-backed *Emoji Sentiment Ranking 1.0* dataset.
 
+## Installation
+
+```bash
+cargo install emoji-sentiment
+```
+
 ## When to Use
 
 Use the `emo` CLI when you need to:
