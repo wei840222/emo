@@ -82,17 +82,16 @@ fn main() -> Result<()> {
     }
 
     if expanded_files.len() == 1 {
-        let path = &expanded_files[0];
+        let (_display_name, path) = &expanded_files[0];
         let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read file: {}", path.display()))?;
         let result = analyzer.analyze_with_mode(&content, cli.top, split_mode);
         render_output(&result, format, cli.no_color);
     } else {
         let mut file_data = Vec::new();
-        for path in &expanded_files {
+        for (display_name, path) in &expanded_files {
             if let Ok(content) = fs::read_to_string(path) {
-                let name_str = path.to_string_lossy().to_string();
-                file_data.push((name_str, content));
+                file_data.push((display_name.clone(), content));
             }
         }
 
@@ -104,30 +103,59 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn collect_filepaths(paths: &[PathBuf]) -> Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
+fn collect_filepaths(paths: &[PathBuf]) -> Result<Vec<(String, PathBuf)>> {
+    let mut results = Vec::new();
+    let multiple_inputs = paths.len() > 1;
+
     for p in paths {
         if p.is_dir() {
-            let entries = fs::read_dir(p)
-                .with_context(|| format!("Failed to read directory: {}", p.display()))?;
-            for entry in entries {
-                let entry = entry?;
-                let path = entry.path();
-                if path.is_file() {
-                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                        if !name.starts_with('.') {
-                            files.push(path);
-                        }
-                    }
-                } else if path.is_dir() {
-                    let sub_files = collect_filepaths(&[path])?;
-                    files.extend(sub_files);
-                }
+            let files = scan_dir(p)?;
+            for file_path in files {
+                let display_name = if multiple_inputs {
+                    let base = p.parent().unwrap_or(p);
+                    file_path
+                        .strip_prefix(base)
+                        .unwrap_or(&file_path)
+                        .to_string_lossy()
+                        .to_string()
+                } else {
+                    file_path
+                        .strip_prefix(p)
+                        .unwrap_or(&file_path)
+                        .to_string_lossy()
+                        .to_string()
+                };
+                results.push((display_name, file_path));
             }
         } else {
-            files.push(p.clone());
+            let display_name = p.to_string_lossy().to_string();
+            results.push((display_name, p.clone()));
         }
     }
-    files.sort();
+
+    results.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(results)
+}
+
+fn scan_dir(p: &PathBuf) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let entries = fs::read_dir(p)
+        .with_context(|| format!("Failed to read directory: {}", p.display()))?;
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() {
+            if path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|name| !name.starts_with('.'))
+            {
+                files.push(path);
+            }
+        } else if path.is_dir() {
+            let sub_files = scan_dir(&path)?;
+            files.extend(sub_files);
+        }
+    }
     Ok(files)
 }

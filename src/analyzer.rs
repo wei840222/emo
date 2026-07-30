@@ -445,7 +445,7 @@ impl<'a> Analyzer<'a> {
                 avg_score,
             });
         }
-        block_stats.sort_by(|a, b| b.count.cmp(&a.count));
+        block_stats.sort_by_key(|b| std::cmp::Reverse(b.count));
         block_stats.truncate(top_n);
 
         // Sentiment Progression
@@ -504,7 +504,7 @@ impl<'a> Analyzer<'a> {
         for (combo, count) in combo_counts {
             combos.push(EmojiCombo { combo, count });
         }
-        combos.sort_by(|a, b| b.count.cmp(&a.count));
+        combos.sort_by_key(|b| std::cmp::Reverse(b.count));
         combos.truncate(top_n);
 
         // Top Used, Positive, Negative
