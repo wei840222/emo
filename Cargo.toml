@@ -1,5 +1,5 @@
 [package]
-name = "emo"
+name = "emoji-sentiment"
 version = "0.1.0"
 edition = "2024"
 authors = ["Wan, Jiun-Wei <wei840222@gmail.com>"]
@@ -17,3 +17,7 @@ colored = "3.0"
 anyhow = "1.0"
 unicode-width = "0.2"
 charabia = { version = "0.9", default-features = false, features = ["chinese-segmentation", "japanese-segmentation-ipadic", "korean"] }
+
+[[bin]]
+name = "emo"
+path = "src/main.rs"
