@@ -1,6 +1,6 @@
 [package]
 name = "emoji-sentiment"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Wan, Jiun-Wei <wei840222@gmail.com>"]
 description = "A fast CLI tool for analyzing emoji usage, sentiment scores, and sentiment intensity in text files or stdin"
