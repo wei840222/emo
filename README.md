@@ -22,18 +22,18 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 | :--- | :--- | :--- |
 | **Multi-File Benchmark** | Aggregated per file | When passing multiple files or directories, benchmarks each file side-by-side (`File Name`, `Emojis`, `Score`, `Intensity`, `Top Emoji`) using relative path display. |
 | **Placement Bias** | Relative position ($0.0$ to $1.0$) | Evaluates whether emojis are `Front-loaded` ($0-33\%$), `Balanced Placement`, or `Trailing / End-loaded` ($66-100\%$). |
-| **Sentiment Volatility (\(\sigma\))** | Standard Deviation of scores | Measures emotional stability vs mood swings (`Monotone / Consistent` $\sigma < 0.2$ vs `High Volatility` $\sigma \ge 0.4$). |
+| **Sentiment Volatility ($\sigma$)** | Standard Deviation of scores | Measures emotional stability vs mood swings (`Monotone / Consistent` $\sigma < 0.2$ vs `High Volatility` $\sigma \ge 0.4$). |
 | **Ambiguity Index (%)** | Neutral emoji ratio | Measures neutral/reserved expression (`Subtle / Ambiguous 💭` $> 50\%$ vs `Direct & Explicit 🎯` $< 20\%$). |
-| **Overall Sentiment Score** | \(\frac{\sum (\text{Score}_i \times \text{Count}_i)}{\sum \text{Count}_i}\) | **Weighted Average Sentiment** (`-1.0` to `+1.0`). Single emoji score is \(\frac{\text{Positive} - \text{Negative}}{\text{Total}}\). |
-| **Sentiment Intensity** | \(\frac{\sum (\text{Intensity}_i \times \text{Count}_i)}{\sum \text{Count}_i}\) | **Emotional Intensity / Non-Neutrality** (`0.0` to `1.0`). Single emoji intensity is \(\frac{\text{Positive} + \text{Negative}}{\text{Total}}\). Measures emotional involvement regardless of positive/negative polarity. |
-| **Polarization Index** | \(4 \times P_{\text{pos}} \times P_{\text{neg}}\) | **Emotional Conflict Index** (`0.0` to `1.0`). Detects whether a text contains contrasting positive and negative emojis simultaneously (`Harmonious` vs `Highly Polarized`). |
+| **Overall Sentiment Score** | $\frac{\sum (\text{Score}_i \times \text{Count}_i)}{\sum \text{Count}_i}$ | **Weighted Average Sentiment** (`-1.0` to `+1.0`). Single emoji score is $\frac{\text{Positive} - \text{Negative}}{\text{Total}}$. |
+| **Sentiment Intensity** | $\frac{\sum (\text{Intensity}_i \times \text{Count}_i)}{\sum \text{Count}_i}$ | **Emotional Intensity / Non-Neutrality** (`0.0` to `1.0`). Single emoji intensity is $\frac{\text{Positive} + \text{Negative}}{\text{Total}}$. Measures emotional involvement regardless of positive/negative polarity. |
+| **Polarization Index** | $4 \times P_{\text{pos}} \times P_{\text{neg}}$ | **Emotional Conflict Index** (`0.0` to `1.0`). Detects whether a text contains contrasting positive and negative emojis simultaneously (`Harmonious` vs `Highly Polarized`). |
 | **Unicode Block Breakdown** | Aggregated by `Unicode block` | Groups emoji usage by official Unicode category (e.g. `Emoticons`, `Transport and Map Symbols`) with average sentiment per category. |
 | **Sentiment Progression Arc** | 4-Quarter Timeline / Segmented | Tracks the emotional trajectory across the text to detect trends (`Warming Up 📈`, `Cooling Down 📉`, `Consistently Positive`, or `Fluctuating 🌊`). |
-| **Emoji Density** | \(\frac{\text{Emojis}}{\text{Chars}} \times 1000\) / \(\frac{\text{Emojis}}{\text{Words}} \times 100\) | Frequency density of emojis per 1,000 characters and per 100 words. |
+| **Emoji Density** | $\frac{\text{Emojis}}{\text{Chars}} \times 1000$ / $\frac{\text{Emojis}}{\text{Words}} \times 100$ | Frequency density of emojis per 1,000 characters and per 100 words. |
 | **Style Level** | Based on Emoji Density | Categorizes text expression style: `Text Only`, `Formal / Minimal`, `Balanced / Casual`, `Expressive / Interactive`, or `Heavy Emoji / Social`. |
-| **Shannon Entropy** | \(H = -\sum p_i \log_2(p_i)\) | Measures vocabulary diversity in bits. Higher entropy indicates a broader variety of emojis used rather than repeating a single emoji. |
-| **Diversity Ratio** | \(\frac{\text{Unique Emojis}}{\text{Total Emojis}}\) | Ratio of unique emoji characters to total emoji occurrences (`0.0` to `1.0`). |
-| **Bursts & Streaks** | Consecutive repeats (\(\ge 2\)) | Detects consecutive repeats of the same emoji (e.g. `🔥🔥🔥` $\rightarrow$ Max Streak: 3). |
+| **Shannon Entropy** | $H = -\sum p_i \log_2(p_i)$ | Measures vocabulary diversity in bits. Higher entropy indicates a broader variety of emojis used rather than repeating a single emoji. |
+| **Diversity Ratio** | $\frac{\text{Unique Emojis}}{\text{Total Emojis}}$ | Ratio of unique emoji characters to total emoji occurrences (`0.0` to `1.0`). |
+| **Bursts & Streaks** | Consecutive repeats ($\ge 2$) | Detects consecutive repeats of the same emoji (e.g. `🔥🔥🔥` $\rightarrow$ Max Streak: 3). |
 | **Emoji Combos** | Bigram pair counting | Detects frequent adjacent emoji pairs in sequence (e.g. `🔥🚀` or `🎉😍`). |
 
 ## Installation & Building
