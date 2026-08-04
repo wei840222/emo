@@ -18,6 +18,8 @@ Powered by the **Emoji Sentiment Ranking 1.0** dataset.
 
 ## Metrics & Output Definitions
 
+| Metric | Scope / Formula | Description |
+| :--- | :--- | :--- |
 | **Multi-File Benchmark** | Aggregated per file | When passing multiple files or directories, benchmarks each file side-by-side (`File Name`, `Emojis`, `Score`, `Intensity`, `Top Emoji`) using relative path display. |
 | **Placement Bias** | Relative position ($0.0$ to $1.0$) | Evaluates whether emojis are `Front-loaded` ($0-33\%$), `Balanced Placement`, or `Trailing / End-loaded` ($66-100\%$). |
 | **Sentiment Volatility (\(\sigma\))** | Standard Deviation of scores | Measures emotional stability vs mood swings (`Monotone / Consistent` $\sigma < 0.2$ vs `High Volatility` $\sigma \ge 0.4$). |
